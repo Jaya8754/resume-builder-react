@@ -1,6 +1,5 @@
-// components/Header.tsx
 import { useLocation, Link } from "react-router-dom";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import UserDropdown from "@/components/pages/UserDropdown";
 import { Button } from "@/components/ui/button";
 import ThemeToggle  from "@/components/pages/ThemeToggle";
 
@@ -38,12 +37,7 @@ function Header({ isLoggedIn = false }: HeaderProps) {
             </Link>
           </>
         )}
-        {isLoggedIn && (
-          <Avatar>
-            <AvatarImage src="/profile.jpg" />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
-        )}
+        {isLoggedIn && <UserDropdown />}
       </div>
     </header>
     </>
