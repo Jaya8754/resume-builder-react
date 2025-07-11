@@ -5,6 +5,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { useState } from "react";
 import { CalendarIcon } from "lucide-react";
+import { CreatableMultiSelect } from "@/components/ui/CreatableMultiSelect";
 import {
   Popover,
   PopoverTrigger,
@@ -15,7 +16,6 @@ import { parseDate } from "chrono-node";
 import { Button } from "@/components/ui/button";
 
 function formatDate(date: Date | undefined) {
-  
   if (!date) return "";
   return date.toLocaleDateString("en-US", {
     day: "2-digit",
@@ -27,10 +27,10 @@ function formatDate(date: Date | undefined) {
 type FormFieldRendererProps = {
   id: string;
   label?: string;
-  type?: "text" | "email" | "password" | "textarea" | "select" | "file" | "date";
+  type?: "text" | "email" | "password" | "textarea" | "select" | "file" | "date" | "multi-select-with-tags";
   required?: boolean;
   placeholder?: string;
-  options?: string[]; // For dropdown
+  options?: string[]; // For dropdown or multi-select options
   value?: string;
   onChange?: (value: string) => void;
 };
@@ -45,10 +45,27 @@ export function FormFieldRenderer({
   value,
   onChange
 }: FormFieldRendererProps) {
-  const [open, setOpen] = useState(false); 
+  const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(
     value ? new Date(value) : undefined
   );
+
+  if (type === "multi-select-with-tags") {
+    return (
+      <div className="grid w-full max-w-sm items-start gap-2">
+        <Label htmlFor={id}>
+          {label}
+          {required && <span className="text-red-600 ml-1">*</span>}
+        </Label>
+        <CreatableMultiSelect
+          value={value || ""}
+          onChange={onChange!}
+          options={options}
+          placeholder={placeholder || "Type or select skills"}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="grid w-full max-w-sm items-start gap-2">
@@ -119,7 +136,6 @@ export function FormFieldRenderer({
           </PopoverContent>
         </Popover>
       )}
-
 
       {["text", "email", "password"].includes(type) && (
         <Input

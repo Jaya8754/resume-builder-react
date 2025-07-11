@@ -1,15 +1,22 @@
 import React from "react";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/store/store";
-import Header from "@/components/pages/Header";
+import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
+import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
+import { resetResume } from "@/store/resumeSlice";  // import reset action
+import type { RootState, AppDispatch } from "@/store/store";
 
 const Dashboard: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
   const username = currentUser?.name || "User";
   const navigate = useNavigate();
-  const hasResumes = false; // replace with actual condition when resumes are integrated
+  const hasResumes = false; // replace with your logic
+
+  const handleCreateNew = () => {
+    dispatch(resetResume());  // clear previous resume data
+    navigate("/resume/personal-info");  // go to start of resume form
+  };
 
   return (
     <>
@@ -27,10 +34,10 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-center pt-3 items-center space-x-4">
               <Button
                 className="bg-[#1982C4] hover:bg-[#156a99] text-white"
-                onClick={() => navigate("/resume/personal-info")}
+                onClick={handleCreateNew}
               >
-              Create New Resume
-            </Button>
+                Create New Resume
+              </Button>
             </div>
             <p className="text-black-300 text-md pt-5">No resumes yet?</p>
             <p className="text-md text-black-600 max-w-md">

@@ -1,9 +1,13 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { educationalInfoSchema } from "@/lib/EducationalInfoSchema";
+import { setEducation } from "@/store/resumeSlice"; // Adjust import path
+import type { RootState } from "@/store/store"; // Adjust import path
+import { ResumePreview } from "@/components/pages/ResumePreview";
 
 export type EducationInfo = {
   degree: string;
@@ -27,8 +31,15 @@ const initialEduFields = [
 ];
 
 export default function EducationForm() {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const educationFromStore = useSelector((state: RootState) => state.resume.education);
+
   const [formData, setFormData] = useState<EducationInfo>(
-    Object.fromEntries(initialEduFields.map((f) => [f.id, ""])) as EducationInfo
+    educationFromStore.length > 0
+      ? educationFromStore[0]
+      : Object.fromEntries(initialEduFields.map((f) => [f.id, ""])) as EducationInfo
   );
 
   const [fields, setFields] = useState(initialEduFields);
@@ -51,26 +62,23 @@ export default function EducationForm() {
     setNewFieldLabel("");
   };
 
-const navigate = useNavigate();
+  const handleBack = () => {
+    navigate("/resume/aboutme");
+  };
 
-const handleBack = () => {
-  navigate("/resume/aboutme");
-};
+  const handleNext = () => {
+    const result = educationalInfoSchema.safeParse(formData);
 
-const handleNext = () => {
-  const result = educationalInfoSchema.safeParse(formData);
+    if (!result.success) {
+      console.log(result.error.format());
+      alert("Please fill all required fields correctly.");
+      return;
+    }
 
-  if (!result.success) {
-    // Show error to the user (example: alert or setError state)
-    console.log(result.error.format());
-    alert("Please fill all required fields correctly.");
-    return;
-  }
+    dispatch(setEducation([formData]));
 
-  // Navigate to the next section if validation passes
-  navigate("/resume/experience-info"); // replace with your actual route
-};
-
+    navigate("/resume/experience-info");
+  };
 
   return (
     <>
@@ -120,27 +128,18 @@ const handleNext = () => {
 
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={handleBack}>
-                {"<- Back"}
+              {"<- Back"}
             </Button>
-            <Button variant="skyblue" onClick={handleNext}>{`Next ->`}</Button>
+            <Button variant="skyblue" onClick={handleNext}>
+              {"Next ->"}
+            </Button>
           </div>
         </div>
 
         {/* Right side: preview */}
-        <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800">
-          <h2 className="text-center text-xl font-semibold mb-6">Preview</h2>
-          <div className="space-y-3">
-            {fields.map(({ id, label }) => {
-              const val = formData[id];
-              if (!val) return null;
-              return (
-                <div key={id}>
-                  <strong>{label}: </strong> <span>{val}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+         <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
+          <ResumePreview isCompact />
+         </div>
       </div>
     </>
   );

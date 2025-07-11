@@ -1,9 +1,14 @@
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Button } from "@/components/ui/button";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store"; 
+import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
-import { Button } from "@/components/ui/button";
-import {personalInfoSchema} from "@/lib/personalInfoSchema";
-import Header from "@/components/pages/Header";
+import { personalInfoSchema } from "@/lib/personalInfoSchema";
+import { setPersonalInfo } from "@/store/resumeSlice"; 
+import { ResumePreview } from "@/components/pages/ResumePreview";
 
 type PersonalInfo = {
   fullName: string;
@@ -25,21 +30,25 @@ const initialFields = [
   { id: "location", label: "Location", type: "text", required: true },
   { id: "linkedinProfile", label: "LinkedIn Profile", type: "text" },
   { id: "portfolio", label: "Portfolio/GitHub", type: "text" },
-  { id: "profilePicture", label: "Profile Picture", type: "file", required: true },
+  { id: "profilePicture", label: "Profile Picture", type: "file", required: false },
 ];
 
 export default function PersonalInfoForm() {
-  const [formData, setFormData] = useState<PersonalInfo>(
-    Object.fromEntries(initialFields.map(f => [f.id, ""])) as PersonalInfo
-  );
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+const personalInfoFromStore = useSelector((state: RootState) => state.resume.personalInfo);
+
+const [formData, setFormData] = useState<PersonalInfo>(() => ({
+  ...Object.fromEntries(initialFields.map(f => [f.id, ""])),
+  ...personalInfoFromStore,
+}));
   const [fields, setFields] = useState(initialFields);
   const [customFieldIds, setCustomFieldIds] = useState<string[]>([]);
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldType, setNewFieldType] = useState<"text" | "email" | "textarea">("text");
-  const [error] = useState("");
-
-  const navigate = useNavigate();
-
+  const [error, setError] = useState("");
+  
   const handleFieldChange = (id: string, value: string) => {
     setFormData(prev => ({ ...prev, [id]: value }));
   };
@@ -69,19 +78,22 @@ export default function PersonalInfoForm() {
     setCustomFieldIds(prev => prev.filter(fid => fid !== id));
   };
 
-const handleNext = () => {
-  const result = personalInfoSchema.safeParse(formData);
+  const handleNext = () => {
+    const result = personalInfoSchema.safeParse(formData);
 
-  if (!result.success) {
-    // Show error to the user (example: alert or setError state)
-    console.log(result.error.format());
-    alert("Please fill all required fields correctly.");
-    return;
-  }
+    if (!result.success) {
+      setError("Please fill all required fields correctly.");
+      console.log(result.error.format());
+      return;
+    }
 
-  // Navigate to the next section if validation passes
-  navigate("/resume/aboutme"); // replace with your actual route
-};
+    setError("");
+    // Dispatch to Redux here
+    dispatch(setPersonalInfo(formData));
+
+    // Navigate to the next step
+    navigate("/resume/aboutme");
+  };
 
   return (
     <>
@@ -149,30 +161,11 @@ const handleNext = () => {
             <Button variant="skyblue" onClick={handleNext}>{`Next ->`}</Button>
           </div>
         </div>
-
+         
         {/* Right side: preview */}
-        <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800">
-          <h2 className="text-center text-xl font-semibold mb-6">Preview</h2>
-          <div className="space-y-4">
-            {fields.map(({ id, label }) => {
-              const val = formData[id];
-              if (!val) return null;
-              if (id === "profilePicture") {
-                return (
-                  <div key={id}>
-                    <strong>{label}: </strong>
-                    <span>{val}</span>
-                  </div>
-                );
-              }
-              return (
-                <div key={id}>
-                  <strong>{label}: </strong> <span>{val}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+         <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
+          <ResumePreview isCompact />
+         </div>
       </div>
     </>
   );

@@ -10,6 +10,10 @@ import ExperienceForm from "@/components/pages/ExperienceForm";
 import AboutMe from "@/components/pages/AboutMeForm";
 import SkillsForm from "./components/pages/SkillsInfoForm";
 import ProjectInfoForm from "./components/pages/ProjectsInfoForm";
+import CertificateForm from "./components/pages/CertificationForm";
+import InterestForm from "./components/pages/InterestForm";
+import LanguageForm from "./components/pages/LanguagesForm";
+import FinalResume from "./components/pages/FinalResume";
 
 function App() {
   return (
@@ -26,6 +30,10 @@ function App() {
       <Route path="/resume/experience-info" element={<ExperienceForm />} />
       <Route path="/resume/skills-info" element={<SkillsForm />} />
       <Route path="/resume/project-info" element={<ProjectInfoForm />} />
+      <Route path="/resume/certificate-info" element={<CertificateForm/>}/>
+      <Route path="/resume/interest-info" element={<InterestForm/>}/>
+      <Route path="/resume/languages-info" element={<LanguageForm/>}/>
+      <Route path="/resume/finalresume" element={<FinalResume/>}/>
     </Routes>
   );
 }

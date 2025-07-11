@@ -8,7 +8,7 @@ export const personalInfoSchema = z.object({
   location: z.string().min(1, "Location is required"),
   linkedinProfile: z.string().optional(),
   portfolio: z.string().optional(),
-  profilePicture: z.string().min(1, "Profile Picture is required"),
+  profilePicture: z.string().optional(),
 });
 
 export type PersonalInfoType = z.infer<typeof personalInfoSchema>;

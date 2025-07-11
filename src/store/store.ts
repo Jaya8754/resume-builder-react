@@ -1,9 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../features/authSlice";
 import type { AuthState } from "../features/authSlice";
+import resumeReducer from "../store/resumeSlice";
+import type { ResumeState } from "../store/resumeSlice";
 
 interface PersistedState {
   auth: AuthState;
+  resume: ResumeState;
 }
 
 const loadState = (): PersistedState | undefined => {
@@ -27,6 +30,7 @@ const saveState = (state: PersistedState) => {
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    resume: resumeReducer,
   },
   preloadedState: loadState(),
 });
@@ -34,8 +38,10 @@ export const store = configureStore({
 store.subscribe(() => {
   saveState({
     auth: store.getState().auth,
+    resume: store.getState().resume,
   });
 });
 
+// Export these types for usage in components
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

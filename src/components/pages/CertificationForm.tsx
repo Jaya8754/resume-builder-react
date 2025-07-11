@@ -1,34 +1,62 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
-import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
-import { projectInfoShema } from "@/lib/ProjectSchema";
-import { setProjects } from "@/store/resumeSlice"; // import your redux action
+import { certificationInfoSchema } from "@/lib/CertificationsSchema";
+import { setCertifications } from "@/store/resumeSlice"; // adjust import path
+import type { RootState } from "@/store/store"; // adjust import path
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
-export type ProjectInfo = {
-  projectTitle: string;
-  description: string;
-  [key: string]: string; 
+export type CertificationInfo = {
+  certificationName: string;
+  issuer: string;
+  issuedDate: string;
+  skillsCovered: string; // comma-separated tags
+  [key: string]: string;
 };
 
 const initialFields = [
-  { id: "projectTitle", label: "Project Title", type: "text", required: true },
-  { id: "description", label: "Description", type: "textarea", required: true },
+  { id: "certificationName", label: "Certificate Name", type: "text", required: true },
+  { id: "issuer", label: "Issuer", type: "text", required: true },
+  { id: "issuedDate", label: "Issued Date", type: "date", required: true },
+  {
+    id: "skillsCovered",
+    label: "Skills Covered",
+    type: "multi-select-with-tags",
+    required: true,
+    options: [
+      "HTML", "CSS", "JavaScript", "TypeScript", "React", "Next.js", "Vue.js", "Angular",
+      "Tailwind CSS", "Bootstrap", "SASS", "Styled Components",
+      "Node.js", "Express.js", "NestJS",
+      "MongoDB", "MySQL", "PostgreSQL", "Firebase", "Supabase",
+      "Redux", "Zustand", "React Query",
+      "GraphQL", "REST API",
+      "Git", "GitHub", "GitLab",
+      "Webpack", "Vite", "Babel", "ESLint", "Prettier",
+      "Jest", "React Testing Library", "Cypress", "Playwright",
+      "Figma", "Adobe XD", "Sketch", "Framer", "Canva",
+      "Docker", "CI/CD", "Vercel", "Netlify", "Heroku",
+      "Python", "Django", "Flask",
+      "Java", "Spring Boot", "Kotlin",
+      "C++", "C#", ".NET"
+    ],
+  },
 ];
 
-export default function ProjectInfoForm() {
-  const dispatch = useDispatch();
+export default function CertificationForm() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const projectFromStore = useSelector((state: RootState) => state.resume.projects[0]);
-  const [formData, setFormData] = useState<ProjectInfo>(
-    projectFromStore ?? (Object.fromEntries(initialFields.map((f) => [f.id, ""])) as ProjectInfo)
+  const certificationsFromStore = useSelector((state: RootState) => state.resume.certifications);
+
+  const [formData, setFormData] = useState<CertificationInfo>(
+    certificationsFromStore.length > 0 
+      ? certificationsFromStore[0] 
+      : Object.fromEntries(initialFields.map((f) => [f.id, ""])) as CertificationInfo
   );
+
   const [fields, setFields] = useState(initialFields);
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldType, setNewFieldType] = useState<"text" | "textarea">("text");
@@ -50,11 +78,11 @@ export default function ProjectInfoForm() {
   };
 
   const handleBack = () => {
-    navigate("/resume/skills-info");
+    navigate("/resume/project-info");
   };
 
   const handleNext = () => {
-    const result = projectInfoShema.safeParse(formData);
+    const result = certificationInfoSchema.safeParse(formData);
 
     if (!result.success) {
       console.log(result.error.format());
@@ -62,10 +90,9 @@ export default function ProjectInfoForm() {
       return;
     }
 
-    // Dispatch the project data wrapped in array (assuming projects is an array in redux)
-    dispatch(setProjects([formData]));
+    dispatch(setCertifications([formData]));
 
-    navigate("/resume/certificate-info");
+    navigate("/resume/interest-info");
   };
 
   return (
@@ -74,10 +101,10 @@ export default function ProjectInfoForm() {
       <div className="flex gap-10 max-w-6xl mx-auto p-6">
         {/* Left side: form */}
         <div className="flex-1 border p-6 rounded-md shadow-sm min-h-[50rem]">
-          <h2 className="text-center text-xl font-semibold mb-6">Projects Done</h2>
+          <h2 className="text-center text-xl font-semibold mb-6">Certifications</h2>
 
           <div className="space-y-6">
-            {fields.map(({ id, label, type, required }) => (
+            {fields.map(({ id, label, type, required, options }) => (
               <FormFieldRenderer
                 key={id}
                 id={id}
@@ -86,6 +113,7 @@ export default function ProjectInfoForm() {
                 required={required}
                 value={formData[id]}
                 onChange={(val) => handleFieldChange(id, val)}
+                options={options || []}
               />
             ))}
           </div>
@@ -101,7 +129,7 @@ export default function ProjectInfoForm() {
             />
             <select
               value={newFieldType}
-              onChange={(e) => setNewFieldType(e.target.value as any)}
+              onChange={(e) => setNewFieldType(e.target.value as "text" | "textarea")}
               className="border px-2 py-1 rounded"
             >
               <option value="text">Text</option>

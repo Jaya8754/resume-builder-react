@@ -2,8 +2,12 @@ import { useState } from "react";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
+import { useDispatch, useSelector } from "react-redux";
+import { setExperience } from "@/store/resumeSlice";  // adjust path as needed
+import type { RootState } from "@/store/store";
 import { useNavigate } from "react-router-dom";
 import { experienceInfoSchema } from "@/lib/ExperienceInfoSchema";
+import { ResumePreview } from "@/components/pages/ResumePreview";
 
 export type ExperienceInfo = {
   workOrInternship: string;
@@ -27,9 +31,14 @@ const initialFields = [
     ];
 
 export default function ExperienceForm() {
+
+  const experienceFromStore = useSelector((state: RootState) => state.resume.experience);
+
   const [formData, setFormData] = useState<ExperienceInfo>(
-      Object.fromEntries(initialFields.map((f) => [f.id, ""])) as ExperienceInfo
-    );
+    experienceFromStore.length > 0
+      ? experienceFromStore[0]
+      : Object.fromEntries(initialFields.map((f) => [f.id, ""])) as ExperienceInfo
+  );
 
     const [fields, setFields] = useState(initialFields);
     const [newFieldLabel, setNewFieldLabel] = useState("");
@@ -51,6 +60,7 @@ export default function ExperienceForm() {
       setNewFieldLabel("");
     };
 
+    const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const handleBack = () => {
@@ -67,7 +77,7 @@ export default function ExperienceForm() {
             return;
         }
 
-        // Navigate to the next section if validation passes
+        dispatch(setExperience([formData]));
         navigate("/resume/skills-info"); // replace with your actual route
     };
     
@@ -127,20 +137,9 @@ export default function ExperienceForm() {
         </div>
 
         {/* Right side: preview */}
-        <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800">
-          <h2 className="text-center text-xl font-semibold mb-6">Preview</h2>
-          <div className="space-y-3">
-            {fields.map(({ id, label }) => {
-              const val = formData[id];
-              if (!val) return null;
-              return (
-                <div key={id}>
-                  <strong>{label}: </strong> <span>{val}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+         <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
+          <ResumePreview isCompact />
+         </div>
       </div>
     </>
 
