@@ -49,7 +49,7 @@ export default function CertificationForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const certificationsFromStore = useSelector((state: RootState) => state.resume.certifications);
+  const certificationsFromStore = useSelector((state: RootState) => state.resume.currentResume.certifications);
 
   const [formData, setFormData] = useState<CertificationInfo>(
     certificationsFromStore.length > 0 

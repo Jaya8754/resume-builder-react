@@ -34,7 +34,7 @@ export default function EducationForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const educationFromStore = useSelector((state: RootState) => state.resume.education);
+  const educationFromStore = useSelector((state: RootState) => state.resume.currentResume.education);
 
   const [formData, setFormData] = useState<EducationInfo>(
     educationFromStore.length > 0

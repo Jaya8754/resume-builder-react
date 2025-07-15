@@ -25,7 +25,7 @@ export default function ProjectInfoForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const projectFromStore = useSelector((state: RootState) => state.resume.projects[0]);
+  const projectFromStore = useSelector((state: RootState) => state.resume.currentResume.projects[0]);
   const [formData, setFormData] = useState<ProjectInfo>(
     projectFromStore ?? (Object.fromEntries(initialFields.map((f) => [f.id, ""])) as ProjectInfo)
   );

@@ -12,7 +12,8 @@ interface ResumePreviewProps {
 
 export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isCompact, showEditLinks,}) => {
   // If resumeData is not passed as prop, get it from Redux store
-  const resume = resumeData ?? useSelector((state: RootState) => state.resume);
+  const resume: ResumeState = resumeData ?? useSelector((state: RootState) => state.resume.currentResume);
+
 
   const {
     personalInfo,
@@ -143,7 +144,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
       {interests.length > 0 && (
         <section className={sectionClass}>
           <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">Interests
-            {renderEditLink("/resume/ingterest-info")}
+            {renderEditLink("/resume/interest-info")}
           </h2>
           <p>{interests.join(", ")}</p>
         </section>

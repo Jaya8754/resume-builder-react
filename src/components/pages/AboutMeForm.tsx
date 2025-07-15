@@ -21,7 +21,7 @@ const initialFields = [
 export default function AboutMeForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const aboutMeFromStore = useSelector((state: RootState) => state.resume.aboutMe.aboutMe);
+  const aboutMeFromStore = useSelector((state: RootState) => state.resume.currentResume.aboutMe.aboutMe);
 
   const [formData, setFormData] = useState<AboutMeInfo>({
     aboutMe: aboutMeFromStore || "",

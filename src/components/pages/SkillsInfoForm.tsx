@@ -30,7 +30,7 @@ const availableSkills = [
 export default function SkillsForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const skillsFromStore = useSelector((state: RootState) => state.resume.skills);
+  const skillsFromStore = useSelector((state: RootState) => state.resume.currentResume.skills);
   const [selectedSkills, setSelectedSkills] = useState<string[]>(skillsFromStore || []);
 
   const handleBack = () => navigate("/resume/experience-info");

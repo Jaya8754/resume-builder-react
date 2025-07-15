@@ -19,7 +19,7 @@ export default function LanguageForm() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const languagesRedux = useSelector((state: RootState) => state.resume.languages);
+  const languagesRedux = useSelector((state: RootState) => state.resume.currentResume.languages);
 
   // When the user edits the languages list (adds/removes)
   const handleLanguagesChange = (val: string) => {

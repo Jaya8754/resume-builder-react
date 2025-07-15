@@ -37,7 +37,7 @@ export default function PersonalInfoForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-const personalInfoFromStore = useSelector((state: RootState) => state.resume.personalInfo);
+const personalInfoFromStore = useSelector((state: RootState) => state.resume.currentResume.personalInfo);
 
 const [formData, setFormData] = useState<PersonalInfo>(() => ({
   ...Object.fromEntries(initialFields.map(f => [f.id, ""])),

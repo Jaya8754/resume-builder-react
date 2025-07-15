@@ -24,7 +24,7 @@ export default function InterestForm() {
   const dispatch = useDispatch<AppDispatch>();
 
   // Get interests from Redux store
-  const interestsFromStore = useSelector((state: RootState) => state.resume.interests);
+  const interestsFromStore = useSelector((state: RootState) => state.resume.currentResume.interests);
   const [interests, setInterests] = useState<string[]>(interestsFromStore || []);
 
   const handleBack = () => navigate("/resume/certificate-info");

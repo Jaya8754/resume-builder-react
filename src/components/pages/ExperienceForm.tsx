@@ -32,7 +32,7 @@ const initialFields = [
 
 export default function ExperienceForm() {
 
-  const experienceFromStore = useSelector((state: RootState) => state.resume.experience);
+  const experienceFromStore = useSelector((state: RootState) => state.resume.currentResume.experience);
 
   const [formData, setFormData] = useState<ExperienceInfo>(
     experienceFromStore.length > 0

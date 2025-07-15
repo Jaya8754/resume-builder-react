@@ -1,7 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 // Types matching your forms in exact order
-
 export type PersonalInfo = {
   fullName: string;
   jobTitle: string;
@@ -73,9 +72,16 @@ export type ResumeState = {
   certifications: CertificationInfo[];
   interests: InterestsInfo;
   languages: LanguageInfo[];
+  id?: string;
+  createdAt?: string;
 };
 
-const initialState: ResumeState = {
+export type FullResumeState = {
+  currentResume: ResumeState;
+  allResumes: (ResumeState & { id: string; createdAt: string })[];
+};
+
+const initialResume: ResumeState = {
   personalInfo: {
     fullName: "",
     jobTitle: "",
@@ -98,41 +104,85 @@ const initialState: ResumeState = {
   languages: [],
 };
 
+const initialState: FullResumeState = {
+  currentResume: initialResume,
+  allResumes: [],
+};
+
 const resumeSlice = createSlice({
   name: "resume",
   initialState,
   reducers: {
+    saveCurrentResume(state: FullResumeState) {
+      const existingIndex = state.allResumes.findIndex(
+        (r) => r.id === (state.currentResume as any).id
+      );
+
+      if (existingIndex !== -1) {
+        // Resume exists → update it
+        state.allResumes[existingIndex] = {
+          ...state.currentResume,
+          id: (state.currentResume as any).id,
+          createdAt: (state.currentResume as any).createdAt,
+        };
+      } else {
+        // Resume is new → add it
+        state.allResumes.push({
+          ...state.currentResume,
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+        });
+      }
+    },
+
     setPersonalInfo(state, action: PayloadAction<PersonalInfo>) {
-      state.personalInfo = action.payload;
+      state.currentResume.personalInfo = action.payload;
     },
     setAboutMe(state, action: PayloadAction<AboutMe>) {
-      state.aboutMe = action.payload;
+      state.currentResume.aboutMe = action.payload;
     },
     setEducation(state, action: PayloadAction<EducationInfo[]>) {
-      state.education = action.payload;
+      state.currentResume.education = action.payload;
     },
     setExperience(state, action: PayloadAction<ExperienceInfo[]>) {
-      state.experience = action.payload;
+      state.currentResume.experience = action.payload;
     },
     setSkills(state, action: PayloadAction<SkillsInfo>) {
-      state.skills = action.payload;
+      state.currentResume.skills = action.payload;
     },
     setProjects(state, action: PayloadAction<ProjectInfo[]>) {
-      state.projects = action.payload;
+      state.currentResume.projects = action.payload;
     },
     setCertifications(state, action: PayloadAction<CertificationInfo[]>) {
-      state.certifications = action.payload;
+      state.currentResume.certifications = action.payload;
     },
-      setInterests(state, action: PayloadAction<string[]>) {
-          state.interests = action.payload;
-
+    setInterests(state, action: PayloadAction<InterestsInfo>) {
+      state.currentResume.interests = action.payload;
     },
     setLanguages(state, action: PayloadAction<LanguageInfo[]>) {
-      state.languages = action.payload;
+      state.currentResume.languages = action.payload;
     },
-      resetResume() {
-          return initialState;
+
+    resetResume(state) {
+      state.currentResume = {
+        ...initialResume,
+        id: "",
+        createdAt: "",
+      } as any;
+    },
+
+    deleteResume(state, action: PayloadAction<string>) {
+      state.allResumes = state.allResumes.filter(r => r.id !== action.payload);
+    },
+
+    loadResume(state, action: PayloadAction<string>) {
+      const resume = state.allResumes.find(r => r.id === action.payload);
+      if (resume) {
+        state.currentResume = {
+          ...resume, // ✅ Keep id and createdAt intact
+        };
       }
+    },
   },
 });
 
@@ -147,6 +197,9 @@ export const {
   setInterests,
   setLanguages,
   resetResume,
+  saveCurrentResume,
+  deleteResume,
+  loadResume,
 } = resumeSlice.actions;
 
 export default resumeSlice.reducer;
