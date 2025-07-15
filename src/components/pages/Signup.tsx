@@ -17,17 +17,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { addRegisteredUser, setCurrentUser } from "@/features/authSlice";
-import type { RootState } from "@/store/store";
 import { useState } from "react";
+import { useSignup, type SignupData } from "@/query/useSignup";
+import { AxiosError } from "axios";
 
 function Signup() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const registeredUsers = useSelector(
-    (state: RootState) => state.auth.registeredUsers
-  );
+  const { mutate } = useSignup();
 
   const [emailError, setEmailError] = useState("");
 
@@ -40,29 +36,30 @@ function Signup() {
   });
 
   const onSubmit = (data: SignupFormType) => {
-    console.log("Registered users:", registeredUsers);
-
-    const emailExists = registeredUsers.some(
-      (user) => user.email.toLowerCase() === data.email.toLowerCase()
-    );
-
-    if (emailExists) {
-      setEmailError("Account already exists. Please login instead.");
-      return;
-    }
-
     setEmailError("");
 
-    const newUser = {
-      id: Date.now(),
+    const newUser: SignupData = {
       name: data.name,
       email: data.email,
       password: data.password,
+      confirmPassword: data.confirmPassword,
     };
 
-    dispatch(addRegisteredUser(newUser));
-    dispatch(setCurrentUser(newUser));
-    navigate("/dashboard");
+    mutate(newUser, {
+      
+      onSuccess: () => {
+        navigate("/login");
+      },
+      onError: (error) => {
+          if(error instanceof AxiosError) {
+            if(error.response && error.response.data) {
+              if (error.response.data.message.includes("Email")) {
+                setEmailError(error.response.data.message);
+              }
+            }
+          }
+      },
+    })
   };
 
   return (

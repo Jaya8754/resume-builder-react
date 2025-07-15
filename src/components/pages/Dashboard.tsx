@@ -15,7 +15,6 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
-  const username = currentUser?.name || "User";
 
   const allResumes = useSelector((state: RootState) => state.resume.allResumes);
   const hasResumes = allResumes?.length > 0;
@@ -103,7 +102,7 @@ const Dashboard: React.FC = () => {
           // When no resumes exist
           <div className="text-center space-y-6 max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold">
-              Hi, <span className="text-[#1982C4]">{username}</span>! Ready to create a resume?
+              Hi, <span className="text-[#1982C4] capitalize">{currentUser?.user?.name || "User"}</span>! Ready to create a resume?
             </h2>
             <p className="text-gray-500 text-lg">
               You don't have any resumes yet. Let's create one!
