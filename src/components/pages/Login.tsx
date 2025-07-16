@@ -1,13 +1,10 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/lib/validation";
 import type { LoginFormType } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
-import { setCurrentUser } from "@/features/authSlice";
-import type { RootState } from "@/store/store";
 import Header from "@/components/pages/Header";
 import {
   Card,
@@ -20,16 +17,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { setCurrentUser } from "@/features/authSlice";
+import { useLogin } from "@/hooks/useLogin";
 
 function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  const registeredUsers = useSelector(
-    (state: RootState) => state.auth.registeredUsers
-  );
-
-  const [loginError, setLoginError] = useState("");
+  const { mutate, error: loginError } = useLogin();
 
   const {
     register,
@@ -40,29 +34,22 @@ function Login() {
   });
 
   const onSubmit = (data: LoginFormType) => {
-    const user = registeredUsers.find(
-      (u) => u.email.toLowerCase() === data.email.toLowerCase()
-    );
-
-    if (!user) {
-      setLoginError("Account does not exist. Please sign up instead.");
-      return;
-    }
-
-    if (user.password !== data.password) {
-      setLoginError("Incorrect password. Please try again.");
-      return;
-    }
-
-    setLoginError("");
-    dispatch(setCurrentUser(user));
-    navigate("/dashboard");
+    mutate(data, {
+      onSuccess: (response) => {
+        dispatch(setCurrentUser(response.data));
+        localStorage.setItem("token", response.data.accessToken);
+        navigate("/dashboard");
+      }
+    });
   };
 
   return (
     <>
       <Header isLoggedIn={false} />
-      <div className="flex justify-center items-center min-h-screen w-full">
+      <div
+        className="flex justify-center items-center min-h-screen w-full bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/ResumeBuilder.png')" }}
+      >
         <Card className="w-full max-w-[400px] shadow-md">
           <CardHeader>
             <CardTitle>Login to your account</CardTitle>
@@ -104,7 +91,7 @@ function Login() {
                 </div>
 
                 {loginError && (
-                  <p className="text-red-600 text-sm font-medium mt-1">{loginError}</p>
+                  <p className="text-red-600 text-sm font-medium mt-1">{loginError?.message}</p>
                 )}
               </div>
 

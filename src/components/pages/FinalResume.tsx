@@ -12,18 +12,24 @@ import { useState } from "react";
 export default function FinalResume() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
   const resumeData = useSelector((state: RootState) => state.resume.currentResume);
+  const currentUser = useSelector((state: RootState) => state.auth.currentUser);
+  
+  const userId = currentUser?.user?.id?.toString();
 
   const [downloadReady, setDownloadReady] = useState(false);
 
   const handleSave = () => {
-    dispatch(saveCurrentResume());
-    navigate("/dashboard"); // Navigate to dashboard after saving
+    if (!userId) return;
+    dispatch(saveCurrentResume({ userId }));
+    navigate("/dashboard");
   };
 
   const handleDownload = () => {
-    dispatch(saveCurrentResume());
-    setDownloadReady(true); // triggers rendering of PDFDownloadLink
+    if (!userId) return; 
+    dispatch(saveCurrentResume({ userId }));
+    setDownloadReady(true);
   };
 
   return (
@@ -38,38 +44,30 @@ export default function FinalResume() {
         </div>
 
         <div className="flex flex-row justify-center gap-4 mt-8">
-          {/* Save Button */}
           <Button variant="skyblue" onClick={handleSave}>
             Save
           </Button>
 
-          {/* Save and Download Button */}
           {downloadReady ? (
             <PDFDownloadLink
               document={<ResumeDocument resumeData={resumeData} />}
-              fileName="Resume_Jaya.pdf"
-              style={{ textDecoration: "none" }}
+              fileName={`Resume_${currentUser?.user.name || "User"}.pdf`}
+              className="no-underline"
             >
               {({ loading }) =>
                 loading ? (
-                  "Preparing document..."
+                  <Button variant="skyblue" className="w-40" disabled>
+                    Preparing...
+                  </Button>
                 ) : (
-                  <Button
-                    variant="skyblue"
-                    className="w-40"
-                    onClick={() => navigate("/dashboard")}
-                  >
-                    Downloading...
+                  <Button variant="skyblue" className="w-40">
+                    Download PDF
                   </Button>
                 )
               }
             </PDFDownloadLink>
           ) : (
-            <Button
-              variant="skyblue"
-              className="w-40"
-              onClick={handleDownload}
-            >
+            <Button variant="skyblue" className="w-40" onClick={handleDownload}>
               Save and Download
             </Button>
           )}

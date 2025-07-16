@@ -15,10 +15,10 @@ const LandingPage: React.FC = () => {
           <div className="flex-1 flex flex-col space-y-15">
             <div>
               <h2 className="text-5xl font-bold">
-                CREATE YOUR <span className="text-[#1982C4]">RESUME</span>
+                CREATE YOUR <span className="text-primary">RESUME</span>
               </h2>
               <p className="text-xl text-gray-600 uppercase tracking-wide mt-1">
-                PROFESSIONAL JOBS DESERVE PROFESSIONAL <span className="text-[#1982C4]">RESUME</span>
+                PROFESSIONAL JOBS DESERVE PROFESSIONAL <span className="text-primary">RESUME</span>
               </p>
             </div>
 
@@ -29,7 +29,7 @@ const LandingPage: React.FC = () => {
             <div className="pl-45">
               <Button
                 onClick={() => navigate("/signup")}
-                className="rounded bg-[#1982C4] px-6 py-3 text-white hover:bg-[#156a99]"
+                className="rounded bg-primary px-6 py-3 text-white hover:bg-primary/90"
               >
                 Get started →
               </Button>
@@ -38,9 +38,9 @@ const LandingPage: React.FC = () => {
 
           <div className="flex-1 flex justify-center items-center">
             <img
-              src="/your-image-path.png"
+              src="/images/ResumeBuilder.png"
               alt="Professional resume illustration"
-              className="w-[400px] h-auto object-contain"
+              className="w-[600px] h-auto object-contain"
             />
           </div>
 

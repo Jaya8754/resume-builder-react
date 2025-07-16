@@ -1,6 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
-// Types matching your forms in exact order
 export type PersonalInfo = {
   fullName: string;
   jobTitle: string;
@@ -76,9 +75,11 @@ export type ResumeState = {
   createdAt?: string;
 };
 
-export type FullResumeState = {
+type FullResumeState = {
   currentResume: ResumeState;
-  allResumes: (ResumeState & { id: string; createdAt: string })[];
+  allResumes: {
+    [userId: string]: (ResumeState & { id: string; createdAt: string })[];
+  };
 };
 
 const initialResume: ResumeState = {
@@ -106,34 +107,38 @@ const initialResume: ResumeState = {
 
 const initialState: FullResumeState = {
   currentResume: initialResume,
-  allResumes: [],
+  allResumes: {},
 };
 
 const resumeSlice = createSlice({
   name: "resume",
   initialState,
   reducers: {
-    saveCurrentResume(state: FullResumeState) {
-      const existingIndex = state.allResumes.findIndex(
+    saveCurrentResume(state, action: PayloadAction<{ userId: string }>) {
+      const { userId } = action.payload;
+      const userResumes = state.allResumes[userId] || [];
+
+      const existingIndex = userResumes.findIndex(
         (r) => r.id === (state.currentResume as any).id
       );
 
       if (existingIndex !== -1) {
-        // Resume exists → update it
-        state.allResumes[existingIndex] = {
+        userResumes[existingIndex] = {
           ...state.currentResume,
           id: (state.currentResume as any).id,
           createdAt: (state.currentResume as any).createdAt,
         };
       } else {
-        // Resume is new → add it
-        state.allResumes.push({
+        userResumes.push({
           ...state.currentResume,
           id: crypto.randomUUID(),
           createdAt: new Date().toISOString(),
         });
       }
+
+      state.allResumes[userId] = userResumes;
     },
+
 
     setPersonalInfo(state, action: PayloadAction<PersonalInfo>) {
       state.currentResume.personalInfo = action.payload;
@@ -171,18 +176,33 @@ const resumeSlice = createSlice({
       } as any;
     },
 
-    deleteResume(state, action: PayloadAction<string>) {
-      state.allResumes = state.allResumes.filter(r => r.id !== action.payload);
+    deleteResume(state, action: PayloadAction<{ userId: string; resumeId: string }>) {
+      state.allResumes[action.payload.userId] = state.allResumes[action.payload.userId]?.filter(
+        r => r.id !== action.payload.resumeId
+      ) || [];
     },
 
-    loadResume(state, action: PayloadAction<string>) {
-      const resume = state.allResumes.find(r => r.id === action.payload);
+    loadResume(state, action: PayloadAction<{ userId: string; resumeId: string }>) {
+      const resumes = state.allResumes[action.payload.userId] || [];
+      const resume = resumes.find(r => r.id === action.payload.resumeId);
       if (resume) {
-        state.currentResume = {
-          ...resume, // ✅ Keep id and createdAt intact
-        };
+        state.currentResume = { ...resume };
       }
     },
+
+    renameResume(
+      state,
+      action: PayloadAction<{ userId: string; resumeId: string; newName: string }>
+    ) {
+      const { userId, resumeId, newName } = action.payload;
+      const userResumes = state.allResumes[userId] || [];
+
+      const resume = userResumes.find((r) => r.id === resumeId);
+      if (resume) {
+        resume.personalInfo.fullName = newName;
+      }
+    }
+
   },
 });
 
@@ -200,6 +220,7 @@ export const {
   saveCurrentResume,
   deleteResume,
   loadResume,
+  renameResume,
 } = resumeSlice.actions;
 
 export default resumeSlice.reducer;

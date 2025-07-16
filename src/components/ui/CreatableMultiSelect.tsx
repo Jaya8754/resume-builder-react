@@ -3,7 +3,7 @@ import type {KeyboardEvent} from "react";
 
 type CreatableMultiSelectProps = {
   options: string[];
-  value: string; // comma separated string
+  value: string; 
   onChange: (val: string) => void;
   placeholder?: string;
 };
@@ -12,7 +12,6 @@ export function CreatableMultiSelect({ options, value, onChange, placeholder }: 
   const [inputValue, setInputValue] = useState("");
   const selected = value ? value.split(",").map(s => s.trim()).filter(Boolean) : [];
 
-  // Add new skill when user presses Enter or comma
   const addSkill = (skill: string) => {
     const skillTrimmed = skill.trim();
     if (skillTrimmed && !selected.includes(skillTrimmed)) {
@@ -28,7 +27,7 @@ export function CreatableMultiSelect({ options, value, onChange, placeholder }: 
       addSkill(inputValue);
     }
     if (e.key === "Backspace" && !inputValue && selected.length) {
-      // Remove last tag if input empty and backspace pressed
+      
       const newSelected = selected.slice(0, selected.length - 1);
       onChange(newSelected.join(", "));
     }
@@ -39,7 +38,6 @@ export function CreatableMultiSelect({ options, value, onChange, placeholder }: 
     onChange(newSelected.join(", "));
   };
 
-  // Filter options to show only those not selected
   const filteredOptions = options.filter(opt => !selected.includes(opt));
 
   return (

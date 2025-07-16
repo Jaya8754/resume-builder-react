@@ -20,10 +20,8 @@ const interestOptions = [
 export default function InterestForm() {
   const navigate = useNavigate();
 
-  // Use typed dispatch here
   const dispatch = useDispatch<AppDispatch>();
 
-  // Get interests from Redux store
   const interestsFromStore = useSelector((state: RootState) => state.resume.currentResume.interests);
   const [interests, setInterests] = useState<string[]>(interestsFromStore || []);
 
@@ -36,7 +34,7 @@ export default function InterestForm() {
       alert("Please fill all required fields correctly.");
       return;
     }
-    dispatch(actions.setInterests(interests));// No more error here
+    dispatch(actions.setInterests(interests));
     navigate("/resume/languages-info");
   };
 

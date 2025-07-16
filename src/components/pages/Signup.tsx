@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import Header from "@/components/pages/Header";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "@/lib/validation";
@@ -17,17 +16,13 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { addRegisteredUser, setCurrentUser } from "@/features/authSlice";
-import type { RootState } from "@/store/store";
 import { useState } from "react";
+import { useSignup, type SignupData } from "@/hooks/useSignup";
+import { AxiosError } from "axios";
 
 function Signup() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-
-  const registeredUsers = useSelector(
-    (state: RootState) => state.auth.registeredUsers
-  );
+  const { mutate } = useSignup();
 
   const [emailError, setEmailError] = useState("");
 
@@ -40,36 +35,40 @@ function Signup() {
   });
 
   const onSubmit = (data: SignupFormType) => {
-    console.log("Registered users:", registeredUsers);
-
-    const emailExists = registeredUsers.some(
-      (user) => user.email.toLowerCase() === data.email.toLowerCase()
-    );
-
-    if (emailExists) {
-      setEmailError("Account already exists. Please login instead.");
-      return;
-    }
-
     setEmailError("");
 
-    const newUser = {
-      id: Date.now(),
+    const newUser: SignupData = {
       name: data.name,
       email: data.email,
       password: data.password,
+      confirmPassword: data.confirmPassword,
     };
 
-    dispatch(addRegisteredUser(newUser));
-    dispatch(setCurrentUser(newUser));
-    navigate("/dashboard");
+    mutate(newUser, {
+      
+      onSuccess: () => {
+        navigate("/dashboard");
+      },
+      onError: (error) => {
+          if(error instanceof AxiosError) {
+            if(error.response && error.response.data) {
+              if (error.response.data.message.includes("Email")) {
+                setEmailError(error.response.data.message);
+              }
+            }
+          }
+      },
+    })
   };
 
   return (
     <>
       <Header isLoggedIn={false} />
 
-      <div className="flex justify-center items-center min-h-screen w-full">
+      <div
+        className="flex justify-center items-center min-h-screen w-full bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/ResumeBuilder.png')" }}
+      >
         <Card className="w-full max-w-[400px] shadow-md">
           <CardHeader>
             <CardTitle>Create your account</CardTitle>

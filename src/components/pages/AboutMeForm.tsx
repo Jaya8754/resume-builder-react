@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { aboutMeSchema } from "@/lib/AboutMeSchema";
-import { setAboutMe } from "@/store/resumeSlice"; // adjust path
-import type { RootState } from "@/store/store"; // adjust path
+import { setAboutMe } from "@/store/resumeSlice"; 
+import type { RootState } from "@/store/store";
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
 export type AboutMeInfo = {
@@ -46,7 +46,7 @@ export default function AboutMeForm() {
       return;
     }
 
-    dispatch(setAboutMe(formData)); // Save to Redux
+    dispatch(setAboutMe(formData)); 
 
     navigate("/resume/educational-info");
   };

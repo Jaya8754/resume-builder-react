@@ -88,10 +88,10 @@ const [formData, setFormData] = useState<PersonalInfo>(() => ({
     }
 
     setError("");
-    // Dispatch to Redux here
+   
     dispatch(setPersonalInfo(formData));
 
-    // Navigate to the next step
+    
     navigate("/resume/aboutme");
   };
 

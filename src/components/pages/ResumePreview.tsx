@@ -2,16 +2,17 @@ import React from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import type { ResumeState } from "@/store/resumeSlice";
+import { Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ResumePreviewProps {
   isCompact?: boolean;
-  resumeData?: ResumeState;  // make it optional
+  resumeData?: ResumeState;  
   showEditLinks?: boolean;
 }
 
 export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isCompact, showEditLinks,}) => {
-  // If resumeData is not passed as prop, get it from Redux store
+ 
   const resume: ResumeState = resumeData ?? useSelector((state: RootState) => state.resume.currentResume);
 
 
@@ -30,14 +31,15 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
   const sectionClass = isCompact ? "mb-4 text-sm" : "mb-6";
 
   const renderEditLink = (path: string) =>
-  showEditLinks && (
-    <Link
-      to={path}
-      className="text-xs text-blue-500 hover:underline float-right no-print no-pdf"
-    >
-      Edit
-    </Link>
-  );
+    showEditLinks && (
+      <Link
+        to={path}
+        className="text-blue-500 hover:text-blue-700 float-right no-print no-pdf"
+        title="Edit"
+      >
+        <Edit className="w-4 h-4" />
+      </Link>
+    );
   
 
   return (

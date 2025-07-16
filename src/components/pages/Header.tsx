@@ -14,7 +14,7 @@ function Header({ isLoggedIn = false }: HeaderProps) {
   return (
     <>
     <header className="flex justify-between items-center px-6 py-4 border-b bg-background text-foreground">
-      <div className="text-xl text-[#1982C4] font-bold">RESUME BUILDER</div>
+      <div className="text-xl text-primary font-bold">RESUME BUILDER</div>
       <div className="flex items-center gap-4">
         <ThemeToggle />
         {!isLoggedIn && location.pathname === "/login" && (

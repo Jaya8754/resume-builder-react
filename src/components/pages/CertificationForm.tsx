@@ -5,15 +5,15 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { certificationInfoSchema } from "@/lib/CertificationsSchema";
-import { setCertifications } from "@/store/resumeSlice"; // adjust import path
-import type { RootState } from "@/store/store"; // adjust import path
+import { setCertifications } from "@/store/resumeSlice"; 
+import type { RootState } from "@/store/store"; 
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
 export type CertificationInfo = {
   certificationName: string;
   issuer: string;
   issuedDate: string;
-  skillsCovered: string; // comma-separated tags
+  skillsCovered: string; 
   [key: string]: string;
 };
 

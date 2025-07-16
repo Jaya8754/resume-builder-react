@@ -21,11 +21,9 @@ export default function LanguageForm() {
 
   const languagesRedux = useSelector((state: RootState) => state.resume.currentResume.languages);
 
-  // When the user edits the languages list (adds/removes)
   const handleLanguagesChange = (val: string) => {
     const newLanguages = val.split(",").map(s => s.trim()).filter(Boolean);
 
-    // Preserve existing levels if language existed before, else default level ''
     const updatedLanguages = newLanguages.map(lang => {
       const existing = languagesRedux.find(l => l.language === lang);
       return {
@@ -37,7 +35,6 @@ export default function LanguageForm() {
     dispatch(setLanguages(updatedLanguages));
   };
 
-  // When the user changes level of a specific language
   const handleLevelChange = (language: string, newLevel: string) => {
     const updatedLanguages = languagesRedux.map(l =>
       l.language === language ? { language, level: newLevel } : l
@@ -48,7 +45,7 @@ export default function LanguageForm() {
   const handleBack = () => navigate("/resume/interest-info");
 
   const handleCreate = () => {
-    // Validate that every language has a level set (non-empty)
+  
     if (languagesRedux.length === 0) {
       alert("Please select at least one language.");
       return;

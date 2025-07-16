@@ -7,7 +7,7 @@ import type { RootState } from "@/store/store";
 import { Label } from "@/components/ui/label";
 import { skillsSchema } from "@/lib/SkillsSchema";
 import { CreatableMultiSelect } from "@/components/ui/CreatableMultiSelect";
-import { setSkills } from "@/store/resumeSlice";  // <-- import action here
+import { setSkills } from "@/store/resumeSlice";  
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
 const availableSkills = [
@@ -43,7 +43,7 @@ export default function SkillsForm() {
       return;
     }
 
-    dispatch(setSkills(selectedSkills)); // dispatch here
+    dispatch(setSkills(selectedSkills));
 
     navigate("/resume/project-info");
   };

@@ -3,7 +3,7 @@ import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useDispatch, useSelector } from "react-redux";
-import { setExperience } from "@/store/resumeSlice";  // adjust path as needed
+import { setExperience } from "@/store/resumeSlice"; 
 import type { RootState } from "@/store/store";
 import { useNavigate } from "react-router-dom";
 import { experienceInfoSchema } from "@/lib/ExperienceInfoSchema";
@@ -71,14 +71,14 @@ export default function ExperienceForm() {
         const result = experienceInfoSchema.safeParse(formData);
 
         if (!result.success) {
-            // Show error to the user (example: alert or setError state)
+      
             console.log(result.error.format());
             alert("Please fill all required fields correctly.");
             return;
         }
 
         dispatch(setExperience([formData]));
-        navigate("/resume/skills-info"); // replace with your actual route
+        navigate("/resume/skills-info"); 
     };
     
     return(

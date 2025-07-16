@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { educationalInfoSchema } from "@/lib/EducationalInfoSchema";
-import { setEducation } from "@/store/resumeSlice"; // Adjust import path
-import type { RootState } from "@/store/store"; // Adjust import path
+import { setEducation } from "@/store/resumeSlice"; 
+import type { RootState } from "@/store/store";
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
 export type EducationInfo = {

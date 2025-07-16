@@ -7,7 +7,7 @@ import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { projectInfoShema } from "@/lib/ProjectSchema";
-import { setProjects } from "@/store/resumeSlice"; // import your redux action
+import { setProjects } from "@/store/resumeSlice"; 
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
 export type ProjectInfo = {
@@ -62,7 +62,6 @@ export default function ProjectInfoForm() {
       return;
     }
 
-    // Dispatch the project data wrapped in array (assuming projects is an array in redux)
     dispatch(setProjects([formData]));
 
     navigate("/resume/certificate-info");

@@ -30,7 +30,7 @@ type FormFieldRendererProps = {
   type?: "text" | "email" | "password" | "textarea" | "select" | "file" | "date" | "multi-select-with-tags";
   required?: boolean;
   placeholder?: string;
-  options?: string[]; // For dropdown or multi-select options
+  options?: string[]; 
   value?: string;
   onChange?: (value: string) => void;
 };

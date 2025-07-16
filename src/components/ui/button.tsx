@@ -22,7 +22,7 @@ const buttonVariants = cva(
         link: 
           "text-primary underline-offset-4 hover:underline",
         skyblue:
-          "bg-[#1982C4] text-white shadow-xs hover:bg-[#1982C4]/90",
+          "bg-primary text-white shadow-xs hover:bg-primary/90",
 
       },
       size: {
