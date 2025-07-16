@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
             >
               Create New Resume
             </Button>
-            <p className="text-gray-300 text-md pt-5">No resumes yet?</p>
+            <p className="text-gray-500 text-md pt-5">No resumes yet?</p>
             <p className="text-md text-gray-600 max-w-md mx-auto">
               Click <span className="text-primary font-medium">Create New Resume</span> button above
               to get started in minutes!
