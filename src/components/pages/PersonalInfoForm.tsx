@@ -7,7 +7,7 @@ import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { personalInfoSchema } from "@/lib/personalInfoSchema";
-import { setPersonalInfo } from "@/store/resumeSlice"; 
+import { setPersonalInfo,updatePersonalInfo } from "@/store/resumeSlice"; 
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
 type PersonalInfo = {
@@ -18,7 +18,6 @@ type PersonalInfo = {
   location: string;
   linkedinProfile: string;
   portfolio: string;
-  profilePicture: string;
   [key: string]: string;
 };
 
@@ -30,7 +29,6 @@ const initialFields = [
   { id: "location", label: "Location", type: "text", required: true },
   { id: "linkedinProfile", label: "LinkedIn Profile", type: "text" },
   { id: "portfolio", label: "Portfolio/GitHub", type: "text" },
-  { id: "profilePicture", label: "Profile Picture", type: "file", required: false },
 ];
 
 export default function PersonalInfoForm() {
@@ -51,6 +49,7 @@ const [formData, setFormData] = useState<PersonalInfo>(() => ({
   
   const handleFieldChange = (id: string, value: string) => {
     setFormData(prev => ({ ...prev, [id]: value }));
+    dispatch(updatePersonalInfo({ [id]: value }));
   };
 
   const addMoreField = () => {
@@ -117,13 +116,14 @@ const [formData, setFormData] = useState<PersonalInfo>(() => ({
                   onChange={(val) => handleFieldChange(id, val)}
                 />
                 {customFieldIds.includes(id) && (
-                  <button
+                  <Button
+                  variant = "ghost"
                     onClick={() => handleDeleteField(id)}
                     className="absolute top-2 right-2 text-red-600 hover:text-red-800 text-sm"
                     title="Remove field"
                   >
-                    ❌
-                  </button>
+                    
+                  </Button >
                 )}
               </div>
             ))}

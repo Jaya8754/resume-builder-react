@@ -1,24 +1,13 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
-import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
+import Header from "@/components/pages/Header";
+import { Button } from "@/components/ui/button";
+import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { educationalInfoSchema } from "@/lib/EducationalInfoSchema";
-import { setEducation } from "@/store/resumeSlice"; 
-import type { RootState } from "@/store/store";
+import { setEducation, updateEducation } from "@/store/resumeSlice";
 import { ResumePreview } from "@/components/pages/ResumePreview";
-
-export type EducationInfo = {
-  degree: string;
-  institution: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  description: string;
-  cgpa: string;
-  [key: string]: string;
-};
+import type { RootState } from "@/store/store";
 
 const initialEduFields = [
   { id: "degree", label: "Degree", type: "text", required: true },
@@ -31,34 +20,37 @@ const initialEduFields = [
 ];
 
 export default function EducationForm() {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const educationFromStore = useSelector((state: RootState) => state.resume.currentResume.education);
-
-  const [formData, setFormData] = useState<EducationInfo>(
-    educationFromStore.length > 0
-      ? educationFromStore[0]
-      : Object.fromEntries(initialEduFields.map((f) => [f.id, ""])) as EducationInfo
+  const formData = useSelector(
+    (state: RootState) => state.resume.currentResume.education[0]
   );
 
   const [fields, setFields] = useState(initialEduFields);
   const [newFieldLabel, setNewFieldLabel] = useState("");
   const [newFieldType, setNewFieldType] = useState<"text" | "textarea">("text");
+  const [error, setError] = useState("");
 
   const handleFieldChange = (id: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    dispatch(updateEducation({ index: 0, updates: { [id]: value } }));
   };
 
   const addMoreField = () => {
     if (!newFieldLabel.trim()) return;
+
     const newId = newFieldLabel.toLowerCase().replace(/\s+/g, "_");
     if (fields.find((f) => f.id === newId)) {
       alert("Field with this name already exists");
       return;
     }
-    setFields((prev) => [...prev, { id: newId, label: newFieldLabel, type: newFieldType }]);
-    setFormData((prev) => ({ ...prev, [newId]: "" }));
+
+    setFields((prev) => [
+      ...prev,
+      { id: newId, label: newFieldLabel, type: newFieldType },
+    ]);
+
+    dispatch(updateEducation({ index: 0, updates: { [newId]: "" } }));
     setNewFieldLabel("");
   };
 
@@ -68,15 +60,14 @@ export default function EducationForm() {
 
   const handleNext = () => {
     const result = educationalInfoSchema.safeParse(formData);
-
     if (!result.success) {
       console.log(result.error.format());
-      alert("Please fill all required fields correctly.");
+      setError("Please fill all required fields correctly.");
       return;
     }
 
+    setError("");
     dispatch(setEducation([formData]));
-
     navigate("/resume/experience-info");
   };
 
@@ -84,7 +75,7 @@ export default function EducationForm() {
     <>
       <Header isLoggedIn={true} />
       <div className="flex gap-10 max-w-6xl mx-auto p-6">
-        {/* Left side: form */}
+        {/* Form */}
         <div className="flex-1 border p-6 rounded-md shadow-sm">
           <h2 className="text-center text-xl font-semibold mb-6">
             Educational Information<span className="text-red-600">*</span>
@@ -98,13 +89,13 @@ export default function EducationForm() {
                 label={label}
                 type={type as any}
                 required={required}
-                value={formData[id]}
+                value={formData?.[id] || ""}
                 onChange={(val) => handleFieldChange(id, val)}
               />
             ))}
           </div>
 
-          {/* Add more fields */}
+          {/* Add More Fields */}
           <div className="mt-6 flex gap-2 items-center">
             <input
               type="text"
@@ -126,6 +117,8 @@ export default function EducationForm() {
             </Button>
           </div>
 
+          {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={handleBack}>
               {"<- Back"}
@@ -136,10 +129,10 @@ export default function EducationForm() {
           </div>
         </div>
 
-        {/* Right side: preview */}
-         <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
+        {/* Live Preview */}
+        <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
           <ResumePreview isCompact />
-         </div>
+        </div>
       </div>
     </>
   );

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { aboutMeSchema } from "@/lib/AboutMeSchema";
-import { setAboutMe } from "@/store/resumeSlice"; 
+import { setAboutMe, updateAboutMe} from "@/store/resumeSlice"; 
 import type { RootState } from "@/store/store";
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
@@ -31,6 +31,7 @@ export default function AboutMeForm() {
 
   const handleFieldChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
+    dispatch(updateAboutMe({ [id]: value }));
   };
 
   const handleBack = () => {

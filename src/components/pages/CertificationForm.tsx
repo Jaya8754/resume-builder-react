@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useNavigate } from "react-router-dom";
 import { certificationInfoSchema } from "@/lib/CertificationsSchema";
-import { setCertifications } from "@/store/resumeSlice"; 
+import { setCertifications, updateCertifications } from "@/store/resumeSlice"; 
 import type { RootState } from "@/store/store"; 
 import { ResumePreview } from "@/components/pages/ResumePreview";
 
@@ -63,6 +63,7 @@ export default function CertificationForm() {
 
   const handleFieldChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
+    dispatch(updateCertifications({ [id]: value }));
   };
 
   const addMoreField = () => {

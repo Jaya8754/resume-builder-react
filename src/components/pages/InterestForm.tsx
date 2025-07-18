@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { CreatableMultiSelect } from "@/components/ui/CreatableMultiSelect";
 import { interestsSchema } from "@/lib/InterestsSchema";
 import * as actions from "@/store/resumeSlice";
+// import { updateInterests } from "@/store/resumeSlice";
 import type { RootState, AppDispatch } from "@/store/store";
 import { ResumePreview } from "@/components/pages/ResumePreview";
 

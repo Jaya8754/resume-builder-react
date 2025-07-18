@@ -79,19 +79,23 @@ export function FormFieldRenderer({
       )}
 
       {type === "select" && (
-        <Select onValueChange={(val) => onChange?.(val)}>
-          <SelectTrigger id={id}>
-            <SelectValue placeholder={placeholder || "Select an option"} />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((opt) => (
-              <SelectItem key={opt} value={opt}>
-                {opt}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="w-full">
+          <Select value={value} onValueChange={(val) => onChange?.(val)}>
+            <SelectTrigger id={id} className="w-full">
+              <SelectValue placeholder={placeholder || "Select an option"} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((opt) => (
+                <SelectItem key={opt} value={opt}>
+                  {opt}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       )}
+
+
 
       {type === "file" && (
         <Input id={id} type="file" onChange={(e) => onChange?.(e.target.files?.[0]?.name || "")} />

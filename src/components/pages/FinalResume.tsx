@@ -21,14 +21,14 @@ export default function FinalResume() {
   const [downloadReady, setDownloadReady] = useState(false);
 
   const handleSave = () => {
-    if (!userId) return;
-    dispatch(saveCurrentResume({ userId }));
+    if (!userId || !resumeData.id) return;
+    dispatch(saveCurrentResume({ userId, resumeId: resumeData.id }));
     navigate("/dashboard");
   };
 
   const handleDownload = () => {
-    if (!userId) return; 
-    dispatch(saveCurrentResume({ userId }));
+    if (!userId || !resumeData.id) return;
+    dispatch(saveCurrentResume({ userId, resumeId: resumeData.id }));
     setDownloadReady(true);
   };
 

@@ -1,4 +1,5 @@
 import api from '@/lib/api';
+import type { CustomError } from '@/types/CustomError';
 import { useMutation } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
 
@@ -19,7 +20,7 @@ const signup = async (data: SignupData) => {
 };
 
 export const useSignup = () => {
-  return useMutation({
+  return useMutation<any, CustomError, SignupData>({
     mutationFn: signup,
   });
 };

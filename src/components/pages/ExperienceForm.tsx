@@ -3,7 +3,7 @@ import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/pages/Header";
 import { useDispatch, useSelector } from "react-redux";
-import { setExperience } from "@/store/resumeSlice"; 
+import { setExperience, updateExperience } from "@/store/resumeSlice"; 
 import type { RootState } from "@/store/store";
 import { useNavigate } from "react-router-dom";
 import { experienceInfoSchema } from "@/lib/ExperienceInfoSchema";
@@ -21,7 +21,7 @@ export type ExperienceInfo = {
 };
 
 const initialFields = [
-    { id: "workOrInternship", label: "Work/Internship", type: "text", required: true },
+    { id: "workOrInternship", label: "Work/Internship", type: "select", required: true, options: ["Work", "Internship"] },
     { id: "jobtitle", label: "Job Title", type: "text", required: true },
     { id: "companyname", label: "Company Name", type: "text", required: true },
     { id: "location", label: "Location", type: "text", required: true },
@@ -46,6 +46,7 @@ export default function ExperienceForm() {
 
     const handleFieldChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
+    dispatch(updateExperience({ [id]: value }));
     };
     
     const addMoreField = () => {
@@ -102,6 +103,7 @@ export default function ExperienceForm() {
                 required={required}
                 value={formData[id]}
                 onChange={(val) => handleFieldChange(id, val)}
+                options={fields.find((f) => f.id === id)?.options || []}
               />
             ))}
           </div>

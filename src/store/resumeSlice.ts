@@ -8,7 +8,6 @@ export type PersonalInfo = {
   location: string;
   linkedinProfile: string;
   portfolio: string;
-  profilePicture: string;
   [key: string]: string;
 };
 
@@ -114,66 +113,113 @@ const resumeSlice = createSlice({
   name: "resume",
   initialState,
   reducers: {
-    saveCurrentResume(state, action: PayloadAction<{ userId: string }>) {
+    saveCurrentResume(state, action: PayloadAction<{ userId: string; resumeId?: string }>) {
       const { userId } = action.payload;
       const userResumes = state.allResumes[userId] || [];
 
-      const existingIndex = userResumes.findIndex(
-        (r) => r.id === (state.currentResume as any).id
-      );
+      let resumeId = state.currentResume.id;
 
-      if (existingIndex !== -1) {
-        userResumes[existingIndex] = {
-          ...state.currentResume,
-          id: (state.currentResume as any).id,
-          createdAt: (state.currentResume as any).createdAt,
-        };
+      if (resumeId) {
+        // Resume already exists, update it
+        const existingIndex = userResumes.findIndex((r) => r.id === resumeId);
+        if (existingIndex !== -1) {
+          userResumes[existingIndex] = {
+            ...state.currentResume,
+            id: resumeId,
+            createdAt: userResumes[existingIndex].createdAt || new Date().toISOString(),
+          };
+        } else {
+          // Somehow resume has id but not found in list
+          userResumes.push({
+            ...state.currentResume,
+            id: resumeId,
+            createdAt: new Date().toISOString(),
+          });
+        }
       } else {
-        userResumes.push({
+        // New resume: generate ID and timestamp
+        resumeId = crypto.randomUUID();
+        const newResume = {
           ...state.currentResume,
-          id: crypto.randomUUID(),
+          id: resumeId,
           createdAt: new Date().toISOString(),
-        });
+        };
+        userResumes.push(newResume);
+        state.currentResume.id = resumeId;
+        state.currentResume.createdAt = newResume.createdAt;
       }
 
       state.allResumes[userId] = userResumes;
     },
 
-
     setPersonalInfo(state, action: PayloadAction<PersonalInfo>) {
       state.currentResume.personalInfo = action.payload;
+    },
+    updatePersonalInfo(state, action) {
+      state.currentResume.personalInfo = { ...state.currentResume.personalInfo, ...action.payload };
     },
     setAboutMe(state, action: PayloadAction<AboutMe>) {
       state.currentResume.aboutMe = action.payload;
     },
+    updateAboutMe(state, action) {
+      state.currentResume.aboutMe = { ...state.currentResume.aboutMe, ...action.payload };
+    },
     setEducation(state, action: PayloadAction<EducationInfo[]>) {
       state.currentResume.education = action.payload;
     },
+    updateEducation(state, action) {
+      const { index, updates } = action.payload;
+      if (state.currentResume.education[index]) {
+        state.currentResume.education[index] = {
+          ...state.currentResume.education[index],
+          ...updates,
+        };
+      }
+    },
+
     setExperience(state, action: PayloadAction<ExperienceInfo[]>) {
       state.currentResume.experience = action.payload;
+    },
+    updateExperience(state, action) {
+      state.currentResume.experience = { ...state.currentResume.experience, ...action.payload };
     },
     setSkills(state, action: PayloadAction<SkillsInfo>) {
       state.currentResume.skills = action.payload;
     },
+    updateSkills(state, action) {
+      state.currentResume.skills = { ...state.currentResume.skills, ...action.payload };
+    },
     setProjects(state, action: PayloadAction<ProjectInfo[]>) {
       state.currentResume.projects = action.payload;
+    },
+    updateProjects(state, action) {
+      state.currentResume.projects = { ...state.currentResume.projects, ...action.payload };
     },
     setCertifications(state, action: PayloadAction<CertificationInfo[]>) {
       state.currentResume.certifications = action.payload;
     },
+    updateCertifications(state, action) {
+      state.currentResume.certifications = { ...state.currentResume.certifications, ...action.payload };
+    },
     setInterests(state, action: PayloadAction<InterestsInfo>) {
       state.currentResume.interests = action.payload;
     },
+    updateInterests(state, action) {
+      state.currentResume.interests = { ...state.currentResume.interests, ...action.payload };
+    },
     setLanguages(state, action: PayloadAction<LanguageInfo[]>) {
       state.currentResume.languages = action.payload;
+    },
+    updateLanguages(state, action) {
+      state.currentResume.languages = { ...state.currentResume.languages, ...action.payload };
     },
 
     resetResume(state) {
       state.currentResume = {
         ...initialResume,
-        id: "",
-        createdAt: "",
-      } as any;
+        id: undefined,
+        createdAt: undefined,
+      };
     },
 
     deleteResume(state, action: PayloadAction<{ userId: string; resumeId: string }>) {
@@ -208,14 +254,23 @@ const resumeSlice = createSlice({
 
 export const {
   setPersonalInfo,
+  updatePersonalInfo,
   setAboutMe,
+  updateAboutMe,
   setEducation,
+  updateEducation,
   setExperience,
+  updateExperience,
   setSkills,
+  updateSkills,
   setProjects,
+  updateProjects,
   setCertifications,
+  updateCertifications,
   setInterests,
+  updateInterests,
   setLanguages,
+  updateLanguages,
   resetResume,
   saveCurrentResume,
   deleteResume,

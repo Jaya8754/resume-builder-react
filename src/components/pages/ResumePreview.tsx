@@ -50,8 +50,19 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
           {renderEditLink("/resume/personal-info")}</h1>
         <p className="text-lg text-gray-700">{personalInfo.jobTitle || "Job Title"}</p>
         <p className="text-sm text-gray-600">
-          {personalInfo.email} | {personalInfo.phoneNumber} | {personalInfo.location}
+          {personalInfo.email} | {personalInfo.phoneNumber} | {personalInfo.location} 
         </p>
+        {personalInfo.linkedinProfile && (
+          <p className="text-sm text-gray-600">
+            LinkedIn: {personalInfo.linkedinProfile}
+          </p>
+        )}
+
+        {personalInfo.portfolio && (
+          <p className="text-sm text-gray-600">
+            Portfolio: {personalInfo.portfolio}
+          </p>
+        )}
       </section>
 
       {/* About Me */}
@@ -86,9 +97,11 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
       {/* Experience */}
       {experience.length > 0 && (
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">Experience
-             {renderEditLink("/resume/experience-info")}
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            {experience[0].workOrInternship === "Internship" ? "Internships" : "Work Experience"}
+            {renderEditLink("/resume/experience-info")}
           </h2>
+
           {experience.map((exp, idx) => (
             <div key={idx} className="mt-2">
               <strong>{exp.jobtitle}</strong>, {exp.companyname} — {exp.location}

@@ -16,15 +16,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
 import { useSignup, type SignupData } from "@/hooks/useSignup";
-import { AxiosError } from "axios";
 
 function Signup() {
   const navigate = useNavigate();
-  const { mutate } = useSignup();
-
-  const [emailError, setEmailError] = useState("");
+  const { mutate, error:signupError } = useSignup();
 
   const {
     register,
@@ -35,7 +31,6 @@ function Signup() {
   });
 
   const onSubmit = (data: SignupFormType) => {
-    setEmailError("");
 
     const newUser: SignupData = {
       name: data.name,
@@ -48,16 +43,7 @@ function Signup() {
       
       onSuccess: () => {
         navigate("/dashboard");
-      },
-      onError: (error) => {
-          if(error instanceof AxiosError) {
-            if(error.response && error.response.data) {
-              if (error.response.data.message.includes("Email")) {
-                setEmailError(error.response.data.message);
-              }
-            }
-          }
-      },
+      }
     })
   };
 
@@ -100,9 +86,9 @@ function Signup() {
                   {errors.email && (
                     <p className="text-red-500 text-xs">{errors.email.message}</p>
                   )}
-                  {emailError && (
+                  {signupError?.errors?.email && (
                     <p className="text-red-600 text-xs mt-1 font-medium">
-                      {emailError}
+                      {signupError.errors.email}
                     </p>
                   )}
                 </div>

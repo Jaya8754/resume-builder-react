@@ -62,6 +62,7 @@ interface ResumeData {
     cgpa?: string;
   }[];
   experience: {
+    workOrInternship:string;
     jobtitle: string;
     companyname: string;
     location: string;
@@ -144,22 +145,37 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
           </View>
         )}
 
-        {/* Experience */}
-        {experience.length > 0 && (
+        {/* Work Experience */}
+        {experience.filter((exp) => exp.workOrInternship === "Work").length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.subHeader}>Experience</Text>
-            {experience.map((exp, i) => (
-              <View key={i} style={{ marginBottom: 6 }}>
-                <Text style={{ fontWeight: "bold" }}>{exp.jobtitle}</Text>
-                <Text>
-                  {exp.companyname} — {exp.location}
-                </Text>
-                <Text style={styles.smallText}>
-                  {exp.startDate} - {exp.endDate}
-                </Text>
-                {exp.responsibilities && <Text>{exp.responsibilities}</Text>}
-              </View>
-            ))}
+            <Text style={styles.subHeader}>Work Experience</Text>
+            {experience
+              .filter((exp) => exp.workOrInternship === "Work")
+              .map((exp, i) => (
+                <View key={`work-${i}`} style={{ marginBottom: 6 }}>
+                  <Text style={{ fontWeight: "bold" }}>{exp.jobtitle}</Text>
+                  <Text>{exp.companyname} — {exp.location}</Text>
+                  <Text style={styles.smallText}>{exp.startDate} - {exp.endDate}</Text>
+                  {exp.responsibilities && <Text>{exp.responsibilities}</Text>}
+                </View>
+              ))}
+          </View>
+        )}
+
+        {/* Internship */}
+        {experience.filter((exp) => exp.workOrInternship === "Internship").length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.subHeader}>Internships</Text>
+            {experience
+              .filter((exp) => exp.workOrInternship === "Internship")
+              .map((exp, i) => (
+                <View key={`intern-${i}`} style={{ marginBottom: 6 }}>
+                  <Text style={{ fontWeight: "bold" }}>{exp.jobtitle}</Text>
+                  <Text>{exp.companyname} — {exp.location}</Text>
+                  <Text style={styles.smallText}>{exp.startDate} - {exp.endDate}</Text>
+                  {exp.responsibilities && <Text>{exp.responsibilities}</Text>}
+                </View>
+              ))}
           </View>
         )}
 
