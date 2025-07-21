@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import { Button } from "@/components/ui/button";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { educationalInfoSchema } from "@/lib/EducationalInfoSchema";
 import { setEducation, updateEducation } from "@/store/resumeSlice";
-import { ResumePreview } from "@/components/pages/ResumePreview";
+import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 import type { RootState } from "@/store/store";
 
 const initialEduFields = [
@@ -23,8 +23,9 @@ export default function EducationForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // 🔄 Directly use Redux state for education[0]
   const formData = useSelector(
-    (state: RootState) => state.resume.currentResume.education[0]
+    (state: RootState) => state.resume.currentResume.education[0] || {}
   );
 
   const [fields, setFields] = useState(initialEduFields);
@@ -49,14 +50,11 @@ export default function EducationForm() {
       ...prev,
       { id: newId, label: newFieldLabel, type: newFieldType },
     ]);
-
     dispatch(updateEducation({ index: 0, updates: { [newId]: "" } }));
     setNewFieldLabel("");
   };
 
-  const handleBack = () => {
-    navigate("/resume/aboutme");
-  };
+  const handleBack = () => navigate("/resume/aboutme");
 
   const handleNext = () => {
     const result = educationalInfoSchema.safeParse(formData);
@@ -74,7 +72,7 @@ export default function EducationForm() {
   return (
     <>
       <Header isLoggedIn={true} />
-      <div className="flex gap-10 max-w-6xl mx-auto p-6">
+      <div className="flex gap-10 max-w-6xl pt-25 mx-auto p-6">
         {/* Form */}
         <div className="flex-1 border p-6 rounded-md shadow-sm">
           <h2 className="text-center text-xl font-semibold mb-6">
@@ -87,9 +85,9 @@ export default function EducationForm() {
                 key={id}
                 id={id}
                 label={label}
-                type={type as any}
+                type={type as "text" | "textarea" | "date"}
                 required={required}
-                value={formData?.[id] || ""}
+                value={formData[id] || ""}
                 onChange={(val) => handleFieldChange(id, val)}
               />
             ))}
@@ -106,7 +104,9 @@ export default function EducationForm() {
             />
             <select
               value={newFieldType}
-              onChange={(e) => setNewFieldType(e.target.value as any)}
+              onChange={(e) =>
+                setNewFieldType(e.target.value as "text" | "textarea")
+              }
               className="border px-2 py-1 rounded"
             >
               <option value="text">Text</option>

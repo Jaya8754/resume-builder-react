@@ -1,4 +1,4 @@
-import api from '@/lib/api';
+import api from '@/api/api';
 import type { CustomError } from '../types/CustomError';
 import { useMutation } from '@tanstack/react-query';
 

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import { useDispatch, useSelector } from "react-redux";
 import { setExperience, updateExperience } from "@/store/resumeSlice"; 
 import type { RootState } from "@/store/store";
 import { useNavigate } from "react-router-dom";
 import { experienceInfoSchema } from "@/lib/ExperienceInfoSchema";
-import { ResumePreview } from "@/components/pages/ResumePreview";
+import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 
 export type ExperienceInfo = {
   workOrInternship: string;
@@ -46,7 +46,7 @@ export default function ExperienceForm() {
 
     const handleFieldChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
-    dispatch(updateExperience({ [id]: value }));
+    dispatch(updateExperience({ index: 0, updates: { [id]: value } }));
     };
     
     const addMoreField = () => {
@@ -86,7 +86,7 @@ export default function ExperienceForm() {
 
     <>
         <Header isLoggedIn={true} />
-        <div className="flex gap-10 max-w-6xl mx-auto p-6">
+        <div className="flex gap-10 max-w-6xl pt-25 mx-auto p-6">
         {/* Left side: form */}
         <div className="flex-1 border p-6 rounded-md shadow-sm">
           <h2 className="text-center text-xl font-semibold mb-6">
@@ -99,7 +99,7 @@ export default function ExperienceForm() {
                 key={id}
                 id={id}
                 label={label}
-                type={type as any}
+                type={type as "text" | "textarea" | "select" | "date"}
                 required={required}
                 value={formData[id]}
                 onChange={(val) => handleFieldChange(id, val)}
@@ -119,7 +119,7 @@ export default function ExperienceForm() {
             />
             <select
               value={newFieldType}
-              onChange={(e) => setNewFieldType(e.target.value as any)}
+              onChange={(e) => setNewFieldType(e.target.value as "text" | "textarea")}
               className="border px-2 py-1 rounded"
             >
               <option value="text">Text</option>

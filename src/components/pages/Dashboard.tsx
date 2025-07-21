@@ -2,7 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { ResumeState } from "@/store/resumeSlice";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import {
@@ -62,7 +62,7 @@ const Dashboard: React.FC = () => {
 
   const handleDownload = async (resume: ResumeState) => {
   const { pdf } = await import("@react-pdf/renderer");
-  const { ResumeDocument } = await import("@/components/pages/ResumeDocument");
+  const { ResumeDocument } = await import("@/components/PreviewComponents/ResumeDocument");
 
   const blob = await pdf(<ResumeDocument resumeData={resume} />).toBlob();
   const url = URL.createObjectURL(blob);
@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
     <>
       <Header isLoggedIn={true} />
   
-      <div className="max-w-6xl mx-auto px-6 pt-10">
+      <div className="max-w-6xl mx-auto px-6 pt-25">
         {hasResumes ? (
           <>
             <div className="flex gap-8">

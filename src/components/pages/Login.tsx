@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/lib/validation";
 import type { LoginFormType } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import {
   Card,
   CardAction,
@@ -47,7 +47,7 @@ function Login() {
     <>
       <Header isLoggedIn={false} />
       <div
-        className="flex justify-center items-center min-h-screen w-full bg-cover bg-center"
+        className="flex justify-center items-center min-h-screen pt-10 w-full bg-cover bg-center"
         style={{ backgroundImage: "url('/images/ResumeBuilder.png')" }}
       >
         <Card className="w-full max-w-[400px] shadow-md">

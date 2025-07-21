@@ -8,6 +8,7 @@ export type PersonalInfo = {
   location: string;
   linkedinProfile: string;
   portfolio: string;
+  profilePicture: string;
   [key: string]: string;
 };
 
@@ -151,7 +152,9 @@ const resumeSlice = createSlice({
 
       state.allResumes[userId] = userResumes;
     },
-
+    setResumeId(state, action: PayloadAction<string>) {
+      state.currentResume.id = action.payload;
+    },
     setPersonalInfo(state, action: PayloadAction<PersonalInfo>) {
       state.currentResume.personalInfo = action.payload;
     },
@@ -167,39 +170,43 @@ const resumeSlice = createSlice({
     setEducation(state, action: PayloadAction<EducationInfo[]>) {
       state.currentResume.education = action.payload;
     },
-    updateEducation(state, action) {
+    updateEducation: (state, action) => {
       const { index, updates } = action.payload;
-      if (state.currentResume.education[index]) {
+      if (!state.currentResume.education[index]) {
+        state.currentResume.education[index] = updates;
+      } else {
         state.currentResume.education[index] = {
           ...state.currentResume.education[index],
           ...updates,
         };
       }
     },
-
     setExperience(state, action: PayloadAction<ExperienceInfo[]>) {
       state.currentResume.experience = action.payload;
     },
-    updateExperience(state, action) {
-      state.currentResume.experience = { ...state.currentResume.experience, ...action.payload };
+    updateExperience(
+      state,
+      action: PayloadAction<{ index: number; updates: { [key: string]: string } }>
+    ) {
+      const { index, updates } = action.payload;
+      const existing = state.currentResume.experience[index] ?? {};
+      state.currentResume.experience[index] = {
+        ...existing,
+        ...updates,
+      };
     },
     setSkills(state, action: PayloadAction<SkillsInfo>) {
       state.currentResume.skills = action.payload;
     },
-    updateSkills(state, action) {
-      state.currentResume.skills = { ...state.currentResume.skills, ...action.payload };
+    updateSkills(state, action: PayloadAction<{ index: number; updates: string[] }>) {
+      const { updates } = action.payload;
+      state.currentResume.skills = updates;
     },
     setProjects(state, action: PayloadAction<ProjectInfo[]>) {
       state.currentResume.projects = action.payload;
     },
-    updateProjects(state, action) {
-      state.currentResume.projects = { ...state.currentResume.projects, ...action.payload };
-    },
     setCertifications(state, action: PayloadAction<CertificationInfo[]>) {
       state.currentResume.certifications = action.payload;
-    },
-    updateCertifications(state, action) {
-      state.currentResume.certifications = { ...state.currentResume.certifications, ...action.payload };
     },
     setInterests(state, action: PayloadAction<InterestsInfo>) {
       state.currentResume.interests = action.payload;
@@ -264,14 +271,13 @@ export const {
   setSkills,
   updateSkills,
   setProjects,
-  updateProjects,
   setCertifications,
-  updateCertifications,
   setInterests,
   updateInterests,
   setLanguages,
   updateLanguages,
   resetResume,
+  setResumeId,
   saveCurrentResume,
   deleteResume,
   loadResume,

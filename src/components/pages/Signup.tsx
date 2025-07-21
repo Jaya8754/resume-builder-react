@@ -1,6 +1,6 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "@/lib/validation";
 import type { SignupFormType } from "@/lib/validation";
@@ -52,7 +52,7 @@ function Signup() {
       <Header isLoggedIn={false} />
 
       <div
-        className="flex justify-center items-center min-h-screen w-full bg-cover bg-center"
+        className="flex justify-center items-center min-h-screen pt-20 w-full bg-cover bg-center"
         style={{ backgroundImage: "url('/images/ResumeBuilder.png')" }}
       >
         <Card className="w-full max-w-[400px] shadow-md">

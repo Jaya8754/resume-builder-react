@@ -1,10 +1,10 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { RootState, AppDispatch } from "@/store/store";
-import { ResumePreview } from "@/components/pages/ResumePreview";
+import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
-import { ResumeDocument } from "@/components/pages/ResumeDocument";
+import Header from "@/components/HeaderComponents/Header";
+import { ResumeDocument } from "@/components/PreviewComponents/ResumeDocument";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { saveCurrentResume } from "@/store/resumeSlice";
 import { useState } from "react";
@@ -35,7 +35,7 @@ export default function FinalResume() {
   return (
     <>
       <Header isLoggedIn={true} />
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-5xl pt-25 mx-auto p-6">
         <div
           id="resume-content"
           className="border rounded-md shadow-md p-4 bg-white dark:bg-gray-900"

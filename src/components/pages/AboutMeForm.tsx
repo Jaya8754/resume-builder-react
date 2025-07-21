@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import { useNavigate } from "react-router-dom";
 import { aboutMeSchema } from "@/lib/AboutMeSchema";
 import { setAboutMe, updateAboutMe} from "@/store/resumeSlice"; 
 import type { RootState } from "@/store/store";
-import { ResumePreview } from "@/components/pages/ResumePreview";
+import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 
 export type AboutMeInfo = {
   aboutMe: string;
@@ -55,7 +55,7 @@ export default function AboutMeForm() {
   return (
     <>
       <Header isLoggedIn={true} />
-      <div className="flex gap-10 max-w-6xl mx-auto p-6">
+      <div className="flex gap-10 max-w-6xl pt-25 mx-auto p-6">
         {/* Left side: form */}
         <div className="flex-1 border p-6 rounded-md shadow-sm min-h-[50rem] ">
           <h2 className="text-center text-xl font-semibold mb-6">
@@ -67,7 +67,7 @@ export default function AboutMeForm() {
               <FormFieldRenderer
                 key={id}
                 id={id}
-                type={type as any}
+                type={type as "textarea" | "text"}
                 value={formData[id]}
                 onChange={(val) => handleFieldChange(id, val)}
               />

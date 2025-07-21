@@ -1,13 +1,13 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { CreatableMultiSelect } from "@/components/ui/CreatableMultiSelect";
 import { languageSchema } from "@/lib/LanguageSchema";
 import { setLanguages } from "@/store/resumeSlice";
 import type { RootState, AppDispatch } from "@/store/store";
-import { ResumePreview } from "@/components/pages/ResumePreview";
+import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 
 const languageOptions = [
   "Tamil", "English", "Hindi", "French", "German",
@@ -71,7 +71,7 @@ export default function LanguageForm() {
   return (
     <>
       <Header isLoggedIn={true} />
-      <div className="flex gap-10 max-w-6xl mx-auto p-6">
+      <div className="flex gap-10 max-w-6xl pt-25 mx-auto p-6">
         {/* Left side: form */}
         <div className="flex-1 border p-6 rounded-md shadow-sm min-h-[50rem]">
           <h2 className="text-center text-xl font-semibold mb-6">

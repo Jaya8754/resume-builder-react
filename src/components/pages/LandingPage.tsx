@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ const LandingPage: React.FC = () => {
   return (
     <>
       <Header isLoggedIn={false} />
-      <div className="min-h-screen px-10 pt-16 pb-10">
+      <div className="min-h-screen px-10 pt-30 pb-10">
         <div className="max-w-screen-xl w-full flex justify-between items-start gap-12 mx-auto">
 
           <div className="flex-1 flex flex-col space-y-15">

@@ -3,12 +3,12 @@ import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import { useNavigate } from "react-router-dom";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { projectInfoShema } from "@/lib/ProjectSchema";
 import { setProjects } from "@/store/resumeSlice"; 
-import { ResumePreview } from "@/components/pages/ResumePreview";
+import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 
 export type ProjectInfo = {
   projectTitle: string;
@@ -34,7 +34,9 @@ export default function ProjectInfoForm() {
   const [newFieldType, setNewFieldType] = useState<"text" | "textarea">("text");
 
   const handleFieldChange = (id: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    const updated = { ...formData, [id]: value };
+    setFormData(updated);
+    dispatch(setProjects([updated])); 
   };
 
   const addMoreField = () => {
@@ -70,7 +72,7 @@ export default function ProjectInfoForm() {
   return (
     <>
       <Header isLoggedIn={true} />
-      <div className="flex gap-10 max-w-6xl mx-auto p-6">
+      <div className="flex gap-10 pt-25 max-w-6xl mx-auto p-6">
         {/* Left side: form */}
         <div className="flex-1 border p-6 rounded-md shadow-sm min-h-[50rem]">
           <h2 className="text-center text-xl font-semibold mb-6">Projects Done</h2>
@@ -81,7 +83,7 @@ export default function ProjectInfoForm() {
                 key={id}
                 id={id}
                 label={label}
-                type={type as any}
+                type={type as "text" | "textarea"}
                 required={required}
                 value={formData[id]}
                 onChange={(val) => handleFieldChange(id, val)}
@@ -100,7 +102,7 @@ export default function ProjectInfoForm() {
             />
             <select
               value={newFieldType}
-              onChange={(e) => setNewFieldType(e.target.value as any)}
+              onChange={(e) => setNewFieldType(e.target.value as "text" | "textarea")}
               className="border px-2 py-1 rounded"
             >
               <option value="text">Text</option>

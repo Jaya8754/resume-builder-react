@@ -7,14 +7,20 @@ import { Link } from "react-router-dom";
 
 interface ResumePreviewProps {
   isCompact?: boolean;
-  resumeData?: ResumeState;  
+  resumeData?: ResumeState;
   showEditLinks?: boolean;
 }
 
-export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isCompact, showEditLinks,}) => {
- 
-  const resume: ResumeState = resumeData ?? useSelector((state: RootState) => state.resume.currentResume);
-
+export const ResumePreview: React.FC<ResumePreviewProps> = ({
+  resumeData,
+  isCompact,
+  showEditLinks,
+}) => {
+  // ✅ Always pull from Redux
+  const currentResume = useSelector((state: RootState) => state.resume.currentResume);
+  
+  // ✅ resumeData is just used to override individual fields (optional fallback)
+  const resume: ResumeState = { ...currentResume, ...resumeData };
 
   const {
     personalInfo,
@@ -40,36 +46,32 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
         <Edit className="w-4 h-4" />
       </Link>
     );
-  
 
   return (
     <div className={`p-4 ${isCompact ? "max-h-[1000vh] overflow-y-auto" : "max-w-3xl mx-auto"}`}>
       {/* Personal Info */}
       <section className={sectionClass}>
-        <h1 className="text-2xl font-bold">{personalInfo.fullName || "Your Name"}
-          {renderEditLink("/resume/personal-info")}</h1>
+        <h1 className="text-2xl font-bold">
+          {personalInfo.fullName || "Your Name"}
+          {renderEditLink("/resume/personal-info")}
+        </h1>
         <p className="text-lg text-gray-700">{personalInfo.jobTitle || "Job Title"}</p>
         <p className="text-sm text-gray-600">
-          {personalInfo.email} | {personalInfo.phoneNumber} | {personalInfo.location} 
+          {personalInfo.email} | {personalInfo.phoneNumber} | {personalInfo.location}
         </p>
         {personalInfo.linkedinProfile && (
-          <p className="text-sm text-gray-600">
-            LinkedIn: {personalInfo.linkedinProfile}
-          </p>
+          <p className="text-sm text-gray-600">LinkedIn: {personalInfo.linkedinProfile}</p>
         )}
-
         {personalInfo.portfolio && (
-          <p className="text-sm text-gray-600">
-            Portfolio: {personalInfo.portfolio}
-          </p>
+          <p className="text-sm text-gray-600">Portfolio: {personalInfo.portfolio}</p>
         )}
       </section>
 
       {/* About Me */}
       {aboutMe.aboutMe && (
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">About Me
-            {renderEditLink("/resume/aboutme")}
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            About Me {renderEditLink("/resume/aboutme")}
           </h2>
           <p className="mt-1">{aboutMe.aboutMe}</p>
         </section>
@@ -78,8 +80,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
       {/* Education */}
       {education.length > 0 && (
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">Education
-             {renderEditLink("/resume/educational-info")}
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Education {renderEditLink("/resume/educational-info")}
           </h2>
           {education.map((edu, idx) => (
             <div key={idx} className="mt-2">
@@ -117,8 +119,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
       {/* Skills */}
       {skills.length > 0 && (
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">Skills
-            {renderEditLink("/resume/skills-info")}
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Skills {renderEditLink("/resume/skills-info")}
           </h2>
           <p className="mt-1">{skills.join(", ")}</p>
         </section>
@@ -127,8 +129,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
       {/* Projects */}
       {projects.length > 0 && (
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">Projects
-            {renderEditLink("/resume/project-info")}
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Projects {renderEditLink("/resume/project-info")}
           </h2>
           {projects.map((proj, idx) => (
             <div key={idx} className="mt-2">
@@ -142,8 +144,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
       {/* Certifications */}
       {certifications.length > 0 && (
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">Certifications
-            {renderEditLink("/resume/certificate-info")}
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Certifications {renderEditLink("/resume/certificate-info")}
           </h2>
           {certifications.map((cert, idx) => (
             <div key={idx} className="mt-2">
@@ -158,8 +160,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
       {/* Interests */}
       {interests.length > 0 && (
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">Interests
-            {renderEditLink("/resume/interest-info")}
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Interests {renderEditLink("/resume/interest-info")}
           </h2>
           <p>{interests.join(", ")}</p>
         </section>
@@ -168,8 +170,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({ resumeData, isComp
       {/* Languages */}
       {languages.length > 0 && (
         <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">Languages
-            {renderEditLink("/resume/languages-info")}
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Languages {renderEditLink("/resume/languages-info")}
           </h2>
           <ul className="list-disc pl-5">
             {languages.map(({ language, level }, idx) => (

@@ -1,6 +1,6 @@
 import { useState } from "react"; 
 import { Button } from "@/components/ui/button";
-import Header from "@/components/pages/Header";
+import Header from "@/components/HeaderComponents/Header";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { skillsSchema } from "@/lib/SkillsSchema";
 import { CreatableMultiSelect } from "@/components/ui/CreatableMultiSelect";
 import { setSkills } from "@/store/resumeSlice";  
-import { ResumePreview } from "@/components/pages/ResumePreview";
+import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 
 const availableSkills = [
   "HTML", "CSS", "JavaScript", "TypeScript", "React", "Next.js", "Vue.js", "Angular",
@@ -65,7 +65,11 @@ export default function SkillsForm() {
           <div className="mt-3">
             <CreatableMultiSelect
               value={selectedSkills.join(", ")}
-              onChange={(val) => setSelectedSkills(val.split(",").map(s => s.trim()).filter(Boolean))}
+              onChange={(val) => {
+                const parsed = val.split(",").map(s => s.trim()).filter(Boolean);
+                setSelectedSkills(parsed);
+                dispatch(setSkills(parsed)); 
+}}
               options={availableSkills}
               placeholder="Type or select skills"
             />
