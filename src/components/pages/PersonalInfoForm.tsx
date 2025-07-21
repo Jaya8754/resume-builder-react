@@ -163,7 +163,7 @@ export default function PersonalInfoForm() {
   return (
     <>
       <Header isLoggedIn={true} />
-      <div className="flex gap-10 max-w-6xl mx-auto p-6">
+      <div className="flex gap-10 max-w-6xl pt-25 mx-auto p-6">
         {/* Left side: form inputs */}
         <div className="flex-1 border p-6 rounded-md shadow-sm">
           <h2 className="text-center text-xl font-semibold mb-8">
