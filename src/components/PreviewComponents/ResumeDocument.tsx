@@ -62,7 +62,7 @@ interface ResumeData {
     cgpa?: string;
   }[];
   experience: {
-    workOrInternship:string;
+    experienceType:string;
     jobtitle: string;
     companyname: string;
     location: string;
@@ -146,11 +146,11 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
         )}
 
         {/* Work Experience */}
-        {experience.filter((exp) => exp.workOrInternship === "Work").length > 0 && (
+        {experience.filter((exp) => exp.experienceType === "Work").length > 0 && (
           <View style={styles.section}>
             <Text style={styles.subHeader}>Work Experience</Text>
             {experience
-              .filter((exp) => exp.workOrInternship === "Work")
+              .filter((exp) => exp.experienceType === "Work")
               .map((exp, i) => (
                 <View key={`work-${i}`} style={{ marginBottom: 6 }}>
                   <Text style={{ fontWeight: "bold" }}>{exp.jobtitle}</Text>
@@ -163,11 +163,11 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
         )}
 
         {/* Internship */}
-        {experience.filter((exp) => exp.workOrInternship === "Internship").length > 0 && (
+        {experience.filter((exp) => exp.experienceType === "Internship").length > 0 && (
           <View style={styles.section}>
             <Text style={styles.subHeader}>Internships</Text>
             {experience
-              .filter((exp) => exp.workOrInternship === "Internship")
+              .filter((exp) => exp.experienceType === "Internship")
               .map((exp, i) => (
                 <View key={`intern-${i}`} style={{ marginBottom: 6 }}>
                   <Text style={{ fontWeight: "bold" }}>{exp.jobtitle}</Text>

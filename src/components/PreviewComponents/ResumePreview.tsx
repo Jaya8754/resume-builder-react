@@ -97,10 +97,10 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       )}
 
       {/* Experience */}
-      {experience.length > 0 && (
+      {experience.length > 0 && experience[0].experienceType !== "--Select--" && (
         <section className={sectionClass}>
           <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
-            {experience[0].workOrInternship === "Internship" ? "Internships" : "Work Experience"}
+            {experience[0].experienceType === "Internship" ? "Internships" : "Work Experience"}
             {renderEditLink("/resume/experience-info")}
           </h2>
 
@@ -127,35 +127,44 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       )}
 
       {/* Projects */}
-      {projects.length > 0 && (
-        <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
-            Projects {renderEditLink("/resume/project-info")}
-          </h2>
-          {projects.map((proj, idx) => (
-            <div key={idx} className="mt-2">
-              <strong>{proj.projectTitle}</strong>
-              {proj.description && <p>{proj.description}</p>}
-            </div>
-          ))}
-        </section>
+      {projects.length > 0 &&
+        projects.every(
+          (proj) => proj.projectTitle.trim() !== "" 
+        ) && (
+          <section className={sectionClass}>
+            <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+              Projects {renderEditLink("/resume/project-info")}
+            </h2>
+            {projects.map((proj, idx) => (
+              <div key={idx} className="mt-2">
+                <strong>{proj.projectTitle}</strong>
+                <p>{proj.description}</p>
+              </div>
+            ))}
+          </section>
       )}
 
       {/* Certifications */}
       {certifications.length > 0 && (
-        <section className={sectionClass}>
-          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
-            Certifications {renderEditLink("/resume/certificate-info")}
-          </h2>
-          {certifications.map((cert, idx) => (
-            <div key={idx} className="mt-2">
-              <strong>{cert.certificationName}</strong> — {cert.issuer}
-              <div className="text-sm text-gray-600">{cert.issuedDate}</div>
-              {cert.skillsCovered && <p>Skills Covered: {cert.skillsCovered}</p>}
-            </div>
-          ))}
-        </section>
+        (() => {
+          const validCerts = certifications.filter(cert => cert.certificationName.trim() !== "");
+          return validCerts.length > 0 ? (
+            <section className={sectionClass}>
+              <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+                Certifications {renderEditLink("/resume/certificate-info")}
+              </h2>
+              {validCerts.map((cert, idx) => (
+                <div key={idx} className="mt-2">
+                  <strong>{cert.certificationName}</strong> — {cert.issuer}
+                  <div className="text-sm text-gray-600">{cert.issuedDate}</div>
+                  {cert.skillsCovered && <p>Skills Covered: {cert.skillsCovered}</p>}
+                </div>
+              ))}
+            </section>
+          ) : null;
+        })()
       )}
+
 
       {/* Interests */}
       {interests.length > 0 && (

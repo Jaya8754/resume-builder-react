@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const experienceInfoSchema = z.object({
-  workOrInternship: z.string().optional(),
+  experienceType: z.string().optional(),
   jobtitle: z.string().optional(),
   companyname: z.string().optional(),
   location: z.string().optional(),

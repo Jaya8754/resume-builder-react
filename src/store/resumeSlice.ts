@@ -28,7 +28,7 @@ export type EducationInfo = {
 };
 
 export type ExperienceInfo = {
-  workOrInternship: string;
+  experienceType: string;
   jobtitle: string;
   companyname: string;
   location: string;
@@ -181,6 +181,12 @@ const resumeSlice = createSlice({
         };
       }
     },
+    addEducation(state, action: PayloadAction<EducationInfo>) {
+    state.currentResume.education.push(action.payload);
+    },
+    removeEducation(state, action: PayloadAction<number>) {
+      state.currentResume.education.splice(action.payload, 1);
+    },
     setExperience(state, action: PayloadAction<ExperienceInfo[]>) {
       state.currentResume.experience = action.payload;
     },
@@ -194,6 +200,12 @@ const resumeSlice = createSlice({
         ...existing,
         ...updates,
       };
+    },
+    addExperience(state, action: PayloadAction<ExperienceInfo>) {
+    state.currentResume.experience.push(action.payload);
+    },
+    removeExperience(state, action: PayloadAction<number>) {
+    state.currentResume.experience.splice(action.payload, 1);
     },
     setSkills(state, action: PayloadAction<SkillsInfo>) {
       state.currentResume.skills = action.payload;
@@ -266,6 +278,10 @@ export const {
   updateAboutMe,
   setEducation,
   updateEducation,
+  addEducation,
+  removeEducation,
+  addExperience,
+  removeExperience,
   setExperience,
   updateExperience,
   setSkills,

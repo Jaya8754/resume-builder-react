@@ -51,7 +51,7 @@ export default function SkillsForm() {
   return (
     <>
       <Header isLoggedIn={true} />
-      <div className="flex gap-10 max-w-6xl mx-auto p-6">
+      <div className="flex gap-10 pt-25 max-w-6xl mx-auto p-6">
         {/* Left side: form */}
         <div className="flex-1 border p-6 rounded-md shadow-sm min-h-[50rem]">
           <h2 className="text-center text-xl font-semibold mb-6">
