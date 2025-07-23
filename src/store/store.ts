@@ -12,6 +12,7 @@ const loadState = (): PersistedState | undefined => {
     const serializedState = localStorage.getItem("reduxState");
     return serializedState ? JSON.parse(serializedState) : undefined;
   } catch (e) {
+    console.error("Could not load state", e);
     return undefined;
   }
 };
@@ -21,6 +22,7 @@ const saveState = (state: PersistedState) => {
     const serializedState = JSON.stringify(state);
     localStorage.setItem("reduxState", serializedState);
   } catch (e) {
+    console.error("Could not save state", e);
   }
 };
 

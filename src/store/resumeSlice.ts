@@ -29,8 +29,8 @@ export type EducationInfo = {
 
 export type ExperienceInfo = {
   experienceType: string;
-  jobtitle: string;
-  companyname: string;
+  jobTitle: string;
+  companyName: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -121,7 +121,7 @@ const resumeSlice = createSlice({
       let resumeId = state.currentResume.id;
 
       if (resumeId) {
-        // Resume already exists, update it
+        
         const existingIndex = userResumes.findIndex((r) => r.id === resumeId);
         if (existingIndex !== -1) {
           userResumes[existingIndex] = {
@@ -130,7 +130,7 @@ const resumeSlice = createSlice({
             createdAt: userResumes[existingIndex].createdAt || new Date().toISOString(),
           };
         } else {
-          // Somehow resume has id but not found in list
+          
           userResumes.push({
             ...state.currentResume,
             id: resumeId,
@@ -138,7 +138,7 @@ const resumeSlice = createSlice({
           });
         }
       } else {
-        // New resume: generate ID and timestamp
+        
         resumeId = crypto.randomUUID();
         const newResume = {
           ...state.currentResume,
@@ -152,9 +152,9 @@ const resumeSlice = createSlice({
 
       state.allResumes[userId] = userResumes;
     },
-    setResumeId(state, action: PayloadAction<string>) {
-      state.currentResume.id = action.payload;
-    },
+    setResumeId: (state, action) => {
+    state.currentResume.id = action.payload;
+   },
     setPersonalInfo(state, action: PayloadAction<PersonalInfo>) {
       state.currentResume.personalInfo = action.payload;
     },
@@ -233,11 +233,12 @@ const resumeSlice = createSlice({
       state.currentResume.languages = { ...state.currentResume.languages, ...action.payload };
     },
 
-    resetResume(state) {
+    resetResume(state, action: PayloadAction<{ resumeId: string }>) {
+      const { resumeId } = action.payload;
       state.currentResume = {
         ...initialResume,
-        id: undefined,
-        createdAt: undefined,
+        id: resumeId,
+        createdAt: new Date().toISOString(),
       };
     },
 

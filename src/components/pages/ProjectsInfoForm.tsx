@@ -9,6 +9,7 @@ import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 import { projectInfoShema } from "@/lib/ProjectSchema";
 import { setProjects } from "@/store/resumeSlice";
 import { Plus, Minus } from "lucide-react";
+import api from "@/api/api";
 
 export type ProjectInfo = {
   projectTitle: string;
@@ -28,6 +29,8 @@ const createEmptyProject = (): ProjectInfo => ({
 export default function ProjectInfoForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
 
   const projectFromStore = useSelector(
     (state: RootState) => state.resume.currentResume.projects
@@ -59,7 +62,7 @@ export default function ProjectInfoForm() {
     setProjectList((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     for (const project of projectList) {
       const result = projectInfoShema.safeParse(project);
       if (!result.success) {
@@ -67,12 +70,25 @@ export default function ProjectInfoForm() {
         return;
       }
     }
-    setError("");
-    dispatch(setProjects(projectList));
-    navigate("/resume/certificate-info");
+
+    try {
+      if (!resumeId) throw new Error("Missing resume ID");
+      setError("");
+
+      await api.put(`/resumes/${resumeId}/projects`, {
+        projects: projectList,
+      });
+
+      dispatch(setProjects(projectList));
+      navigate(`/resume/${resumeId}/certificate-info`);
+    } catch (err) {
+      console.error("Failed to save projects:", err);
+      setError("Failed to save projects, please try again.");
+    }
   };
 
-  const handleBack = () => navigate("/resume/skills-info");
+
+  const handleBack = () => navigate(`/resume/${resumeId}/skills-info`);
 
   return (
     <>

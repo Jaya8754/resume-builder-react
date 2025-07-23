@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/HeaderComponents/Header";
 import type { EducationInfo } from "@/store/resumeSlice";
 import { Button } from "@/components/ui/button";
+import api from "@/api/api";
 import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
 import { educationalInfoSchema } from "@/lib/EducationalInfoSchema";
 import { setEducation } from "@/store/resumeSlice";
@@ -30,6 +31,7 @@ const createEmptyEducation = (): EducationInfo =>
 
 export default function EducationForm() {
   const dispatch = useDispatch();
+  const resumeId = useSelector((state: RootState) => state.resume.currentResume?.id);
   const navigate = useNavigate();
 
   const educationFromStore = useSelector(
@@ -68,7 +70,7 @@ export default function EducationForm() {
 
   const handleBack = () => navigate("/resume/aboutme");
 
-  const handleNext = () => {
+  const handleNext = async () => {
     for (const edu of educationList) {
       const result = educationalInfoSchema.safeParse(edu);
       if (!result.success) {
@@ -76,10 +78,26 @@ export default function EducationForm() {
         return;
       }
     }
-    setError("");
-    dispatch(setEducation(educationList));
-    navigate("/resume/experience-info");
+
+    try {
+      if (!resumeId) {
+        setError("Resume ID is missing.");
+        return;
+      }
+
+      await api.put(`/resumes/${resumeId}/educations`, {
+        educations: educationList,
+      });
+
+      setError("");
+      dispatch(setEducation(educationList));
+      navigate(`/resume/${resumeId}/experience-info`);
+    } catch (err) {
+      console.error("Error saving education info:", err);
+      setError("Failed to save education info. Please try again.");
+    }
   };
+
 
   return (
     <>

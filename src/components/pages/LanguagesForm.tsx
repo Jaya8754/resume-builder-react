@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import Header from "@/components/HeaderComponents/Header";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
@@ -8,6 +9,7 @@ import { languageSchema } from "@/lib/LanguageSchema";
 import { setLanguages } from "@/store/resumeSlice";
 import type { RootState, AppDispatch } from "@/store/store";
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
+import api from "@/api/api";
 
 const languageOptions = [
   "Tamil", "English", "Hindi", "French", "German",
@@ -18,6 +20,8 @@ const levelOptions = ["Beginner", "Intermediate", "Fluent", "Native"];
 export default function LanguageForm() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
+  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id); 
 
   const languagesRedux = useSelector((state: RootState) => state.resume.currentResume.languages);
 
@@ -42,10 +46,12 @@ export default function LanguageForm() {
     dispatch(setLanguages(updatedLanguages));
   };
 
-  const handleBack = () => navigate("/resume/interest-info");
+  const handleBack = () => navigate(`/resume/${resumeId}/interest-info`);
 
-  const handleCreate = () => {
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleCreate = async () => {
     if (languagesRedux.length === 0) {
       alert("Please select at least one language.");
       return;
@@ -65,7 +71,23 @@ export default function LanguageForm() {
       return;
     }
 
-    navigate("/resume/finalresume");
+    try {
+      setLoading(true);
+      setError("");
+
+      if (!resumeId) throw new Error("Missing resume ID");
+
+      await api.put(`/resumes/${resumeId}/languages`, {
+        languages: languagesRedux,
+      });
+
+      navigate(`/resume/${resumeId}/finalresume`);
+    } catch (err) {
+      console.error("Failed to save languages:", err);
+      setError("Failed to save languages, please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -111,20 +133,23 @@ export default function LanguageForm() {
             ))}
           </div>
 
+          {/* Show error if any */}
+          {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+
           <div className="mt-6 flex justify-between">
-            <Button variant="outline" onClick={handleBack}>
+            <Button variant="outline" onClick={handleBack} disabled={loading}>
               {"<- Back"}
             </Button>
-            <Button variant="skyblue" onClick={handleCreate}>
-              {"Create ->"}
+            <Button variant="skyblue" onClick={handleCreate} disabled={loading}>
+              {loading ? "Saving..." : "Create ->"}
             </Button>
           </div>
         </div>
 
         {/* Right side: preview */}
-         <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
+        <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
           <ResumePreview isCompact />
-         </div>
+        </div>
       </div>
     </>
   );

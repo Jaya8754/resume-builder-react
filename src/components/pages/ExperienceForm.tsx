@@ -6,6 +6,7 @@ import Header from "@/components/HeaderComponents/Header";
 import { useDispatch, useSelector } from "react-redux";
 import { setExperience } from "@/store/resumeSlice"; 
 import type { RootState } from "@/store/store";
+import api from "@/api/api";
 import { useNavigate } from "react-router-dom";
 import { experienceInfoSchema } from "@/lib/ExperienceInfoSchema";
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
@@ -13,8 +14,8 @@ import { Plus, Minus } from "lucide-react";
 
 export type ExperienceInfo = {
   experienceType: string;
-  jobtitle: string;
-  companyname: string;
+  jobTitle: string;
+  companyName: string;
   location: string;
   startDate: string;
   endDate: string;
@@ -24,8 +25,8 @@ export type ExperienceInfo = {
 
 const initialFields = [
   { id: "experienceType", label: "Work/Internship", type: "select", required: true, options: ["--Select--", "Work", "Internship"] },
-  { id: "jobtitle", label: "Job Title", type: "text", required: true },
-  { id: "companyname", label: "Company Name", type: "text", required: true },
+  { id: "jobTitle", label: "Job Title", type: "text", required: true },
+  { id: "companyName", label: "Company Name", type: "text", required: true },
   { id: "location", label: "Location", type: "text", required: true },
   { id: "startDate", label: "Start Date", type: "date", required: true },
   { id: "endDate", label: "End Date", type: "date" },
@@ -61,26 +62,62 @@ export default function ExperienceForm() {
   };
 
   const removeExperienceForm = (index: number) => {
-    if (experienceList.length === 1) return; // Prevent deleting the last form
+    if (experienceList.length === 1) return; 
     const updatedList = experienceList.filter((_, i) => i !== index);
     setExperienceList(updatedList);
   };
 
   const handleBack = () => {
-    navigate("/resume/educational-info");
+    navigate(`/resume/${resumeId}/educational-info`);
   };
 
-  const handleNext = () => {
-    for (const experience of experienceList) {
-      const result = experienceInfoSchema.safeParse(experience);
-      if (!result.success) {
-        alert("Please fill all required fields correctly.");
-        return;
-      }
+  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
+
+const handleNext = async () => {
+  for (const experience of experienceList) {
+    const result = experienceInfoSchema.safeParse(experience);
+    if (!result.success) {
+      alert("Please fill all required fields correctly.");
+      return;
     }
-    dispatch(setExperience(experienceList));
-    navigate("/resume/skills-info");
-  };
+  }
+
+  dispatch(setExperience(experienceList));
+
+  const transformedExperiences = experienceList.map(exp => ({
+    experienceType: exp.experienceType,
+    jobTitle: exp.jobTitle,     
+    companyName: exp.companyName,
+    location: exp.location,
+    startDate: exp.startDate,
+    endDate: exp.endDate,
+    responsibilities: exp.responsibilities.trim(),
+  }));
+
+  for (const exp of transformedExperiences) {
+    if (!exp.jobTitle) {
+      alert("Job Title cannot be empty.");
+      return;
+    }
+    if (!exp.companyName) {
+      alert("Company Name cannot be empty.");
+      return;
+    }
+  }
+
+  try {
+    await api.put(`/resumes/${resumeId}/experiences`, {
+      experiences: transformedExperiences,
+    });
+
+    navigate(`/resume/${resumeId}/skills-info`);
+  } catch (error) {
+    console.error("Failed to update experience:", error);
+    alert("An error occurred while saving experience. Please try again.");
+  }
+};
+
+
 
   return (
     <>

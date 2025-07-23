@@ -1,4 +1,4 @@
-import { useState } from "react"; 
+import { useState, useEffect } from "react"; 
 import { Button } from "@/components/ui/button";
 import Header from "@/components/HeaderComponents/Header";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import { skillsSchema } from "@/lib/SkillsSchema";
 import { CreatableMultiSelect } from "@/components/ui/CreatableMultiSelect";
 import { setSkills } from "@/store/resumeSlice";  
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
+import api from "@/api/api";
 
 const availableSkills = [
   "HTML", "CSS", "JavaScript", "TypeScript", "React", "Next.js", "Vue.js", "Angular",
@@ -30,22 +31,44 @@ const availableSkills = [
 export default function SkillsForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
   const skillsFromStore = useSelector((state: RootState) => state.resume.currentResume.skills);
   const [selectedSkills, setSelectedSkills] = useState<string[]>(skillsFromStore || []);
 
-  const handleBack = () => navigate("/resume/experience-info");
+  useEffect(() => {
+  setSelectedSkills(skillsFromStore || []);
+  }, [skillsFromStore]);
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleNext = () => {
+  const handleBack = () => navigate(`/resume/${resumeId}/experience-info`);
+
+  const handleNext = async () => {
     const result = skillsSchema.safeParse({ skills: selectedSkills });
     if (!result.success) {
       console.log(result.error.format());
-      alert("Please fill all required fields correctly.");
+      setError("Please fill all required fields correctly.");
       return;
     }
 
-    dispatch(setSkills(selectedSkills));
+    try {
+      setLoading(true);
+      setError("");
 
-    navigate("/resume/project-info");
+      await api.put(`/resumes/${resumeId}/skills`, {
+        skills: selectedSkills,
+      });
+
+      dispatch(setSkills(selectedSkills));
+      navigate(`/resume/${resumeId}/project-info`);
+    } catch (err) {
+      console.error("Failed to save skills:", err);
+      setError("Failed to save skills, please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,34 +84,37 @@ export default function SkillsForm() {
             Select the skills you want to showcase on your resume.
           </p>
 
+          {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+
           <Label htmlFor="skills">Choose Skills<span className="text-red-600">*</span></Label>
           <div className="mt-3">
-            <CreatableMultiSelect
-              value={selectedSkills.join(", ")}
-              onChange={(val) => {
-                const parsed = val.split(",").map(s => s.trim()).filter(Boolean);
-                setSelectedSkills(parsed);
-                dispatch(setSkills(parsed)); 
-}}
-              options={availableSkills}
-              placeholder="Type or select skills"
-            />
+           <CreatableMultiSelect
+                value={selectedSkills.join(", ")}
+                onChange={(val) => {
+                  const parsed = val.split(",").map((s) => s.trim()).filter(Boolean);
+                  setSelectedSkills(parsed);
+                  dispatch(setSkills(parsed)); 
+                }}
+                options={availableSkills}
+                placeholder="Type or select skills"
+              />
+
           </div>
 
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={handleBack}>
               {"<- Back"}
             </Button>
-            <Button variant="skyblue" onClick={handleNext}>
-              {"Next ->"}
+            <Button variant="skyblue" onClick={handleNext} disabled={loading}>
+              {loading ? "Saving..." : "Next ->"}
             </Button>
           </div>
         </div>
 
         {/* Right side: preview */}
-         <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
+        <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
           <ResumePreview isCompact />
-         </div>
+        </div>
       </div>
     </>
   );

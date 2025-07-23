@@ -8,12 +8,12 @@ import PersonalInfoForm from "@/components/pages/PersonalInfoForm";
 import EducationalInfoForm from "@/components/pages/EducationalInfoForm";
 import ExperienceForm from "@/components/pages/ExperienceForm";
 import AboutMe from "@/components/pages/AboutMeForm";
-import SkillsForm from "./components/pages/SkillsInfoForm";
-import ProjectInfoForm from "./components/pages/ProjectsInfoForm";
-import CertificateForm from "./components/pages/CertificationForm";
-import InterestForm from "./components/pages/InterestForm";
-import LanguageForm from "./components/pages/LanguagesForm";
-import FinalResume from "./components/pages/FinalResume";
+import SkillsForm from "@/components/pages/SkillsInfoForm";
+import ProjectInfoForm from "@/components/pages/ProjectsInfoForm";
+import CertificateForm from "@/components/pages/CertificationForm";
+import InterestForm from "@/components/pages/InterestForm";
+import LanguageForm from "@/components/pages/LanguagesForm";
+import FinalResume from "@/components/pages/FinalResume";
 
 function App() {
   return (
@@ -24,16 +24,18 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/resume/personal-info" element={<PersonalInfoForm />} />
-      <Route path="/resume/aboutme" element={<AboutMe />} />
-      <Route path="/resume/educational-info" element={<EducationalInfoForm />} />
-      <Route path="/resume/experience-info" element={<ExperienceForm />} />
-      <Route path="/resume/skills-info" element={<SkillsForm />} />
-      <Route path="/resume/project-info" element={<ProjectInfoForm />} />
-      <Route path="/resume/certificate-info" element={<CertificateForm/>}/>
-      <Route path="/resume/interest-info" element={<InterestForm/>}/>
-      <Route path="/resume/languages-info" element={<LanguageForm/>}/>
-      <Route path="/resume/finalresume" element={<FinalResume/>}/>
+
+      {/* Routes with resumeId as URL param */}
+      <Route path="/resume/:resumeId/personal-info" element={<PersonalInfoForm />} />
+      <Route path="/resume/:resumeId/aboutme" element={<AboutMe />} />
+      <Route path="/resume/:resumeId/educational-info" element={<EducationalInfoForm />} />
+      <Route path="/resume/:resumeId/experience-info" element={<ExperienceForm />} />
+      <Route path="/resume/:resumeId/skills-info" element={<SkillsForm />} />
+      <Route path="/resume/:resumeId/project-info" element={<ProjectInfoForm />} />
+      <Route path="/resume/:resumeId/certificate-info" element={<CertificateForm />} />
+      <Route path="/resume/:resumeId/interest-info" element={<InterestForm />} />
+      <Route path="/resume/:resumeId/languages-info" element={<LanguageForm />} />
+      <Route path="/resume/:resumeId/finalresume" element={<FinalResume />} />
     </Routes>
   );
 }

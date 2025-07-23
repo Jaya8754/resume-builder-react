@@ -8,10 +8,9 @@ import { personalInfoSchema } from "@/lib/personalInfoSchema";
 import {
   setPersonalInfo,
   updatePersonalInfo,
-  setResumeId,
 } from "@/store/resumeSlice";
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
-import api from "@/api/api"; 
+import api from "@/api/api";
 import type { RootState } from "@/store/store";
 
 type PersonalInfo = {
@@ -41,22 +40,14 @@ export default function PersonalInfoForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Get the current resume ID from Redux
   const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
-  console.log("Current resumeId:", resumeId);
+  const personalInfoFromStore = useSelector((state: RootState) => state.resume.currentResume.personalInfo);
 
-  // Get personal info from Redux
-  const personalInfoFromStore = useSelector(
-    (state: RootState) => state.resume.currentResume.personalInfo
-  );
-
-  // Get current logged-in user ID from auth slice (adjust selector as needed)
-  // const currentUserId = useSelector((state: RootState) => state.auth.currentUser?.user?.id);
-
-  const [formData, setFormData] = useState<PersonalInfo>(() => ({
+  const [formData, setFormData] = useState<PersonalInfo>({
     ...Object.fromEntries(initialFields.map((f) => [f.id, ""])),
     ...personalInfoFromStore,
-  }));
+  });
+
   const [fields, setFields] = useState(initialFields);
   const [customFieldIds, setCustomFieldIds] = useState<string[]>([]);
   const [newFieldLabel, setNewFieldLabel] = useState("");
@@ -64,31 +55,32 @@ export default function PersonalInfoForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Sync local formData when Redux personalInfo updates
   useEffect(() => {
     setFormData((prev) => ({ ...prev, ...personalInfoFromStore }));
   }, [personalInfoFromStore]);
 
   useEffect(() => {
-    if (!resumeId) return; // No resume ID yet, likely new resume
+    if (!resumeId) return;
 
-    async function fetchPersonalInfo() {
-      setLoading(true);
+    const fetchPersonalInfo = async () => {
       try {
+        setLoading(true);
         const response = await api.get(`/resumes/${resumeId}`);
-        if (response.data?.resume?.personalInfo) {
-          const backendPersonalInfo = response.data.resume.personalInfo;
-          dispatch(setPersonalInfo(backendPersonalInfo));
-          setFormData(backendPersonalInfo);
+        const backendData = response?.data?.resume?.personalInfo;
+
+        if (backendData) {
+          dispatch(setPersonalInfo(backendData));
+          setFormData((prev) => ({ ...prev, ...backendData }));
         }
       } catch (err) {
-        console.error("Failed to fetch personal info", err);
+        console.error("Error fetching personal info", err);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
     fetchPersonalInfo();
-  }, [dispatch, resumeId]);
+  }, [resumeId, dispatch]);
 
   const handleFieldChange = (id: string, value: string) => {
     setFormData((prev) => ({ ...prev, [id]: value }));
@@ -99,19 +91,20 @@ export default function PersonalInfoForm() {
     if (!newFieldLabel.trim()) return;
 
     const newId = newFieldLabel.toLowerCase().replace(/\s+/g, "_");
-    if (fields.find((f) => f.id === newId)) {
-      alert("Field with this name already exists");
+    if (fields.some((f) => f.id === newId)) {
+      alert("Field already exists");
       return;
     }
 
-    setFields((prev) => [...prev, { id: newId, label: newFieldLabel, type: newFieldType }]);
-    setFormData((prev) => ({ ...prev, [newId]: "" }));
+    const newField = { id: newId, label: newFieldLabel, type: newFieldType };
+    setFields((prev) => [...prev, newField]);
     setCustomFieldIds((prev) => [...prev, newId]);
+    setFormData((prev) => ({ ...prev, [newId]: "" }));
     setNewFieldLabel("");
   };
 
   const handleDeleteField = (id: string) => {
-    setFields((prev) => prev.filter((field) => field.id !== id));
+    setFields((prev) => prev.filter((f) => f.id !== id));
     setFormData((prev) => {
       const updated = { ...prev };
       delete updated[id];
@@ -124,7 +117,7 @@ export default function PersonalInfoForm() {
     const result = personalInfoSchema.safeParse(formData);
 
     if (!result.success) {
-      setError("Please fill all required fields correctly.");
+      setError("Please fill in required fields correctly.");
       console.log(result.error.format());
       return;
     }
@@ -134,27 +127,22 @@ export default function PersonalInfoForm() {
 
     try {
       if (resumeId) {
-        // Update existing resume — send formData directly (not nested)
-        await api.put(`/resumes/${resumeId}`, formData);
+      await api.put(`/resumes/${resumeId}/personal-details`, {
+        ...formData,  
+      });
       } else {
-        // Create new resume — send formData directly
-        const response = await api.post("/resumes", formData);
-
-        console.log("Resume create response:", response.data);
-
-        if (response.data?.resume?.id) {
-          const newId = response.data.resume.id;
-
-          // Save new resumeId in Redux
-          dispatch(setResumeId(newId));
+        const response = await api.post("/resumes", { personalInfo: formData });
+        const newId = response?.data?.resume?.id;
+        if (newId) {
+          console.log("Resume created with ID:", newId);
         }
       }
 
       dispatch(setPersonalInfo(formData));
-      navigate("/resume/aboutme");
+      navigate(`/resume/${resumeId}/aboutme`);
     } catch (err) {
-      console.error("Failed to save personal info", err);
-      alert("Failed to save personal info, please try again.");
+      console.error("Error saving personal info", err);
+      alert("Failed to save. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -162,12 +150,11 @@ export default function PersonalInfoForm() {
 
   return (
     <>
-      <Header isLoggedIn={true} />
+      <Header isLoggedIn />
       <div className="flex gap-10 max-w-6xl pt-25 mx-auto p-6">
-        {/* Left side: form inputs */}
         <div className="flex-1 border p-6 rounded-md shadow-sm">
           <h2 className="text-center text-xl font-semibold mb-8">
-            Personal Information<span className="text-red-600">*</span>
+            Personal Information <span className="text-red-600">*</span>
           </h2>
 
           {loading && <p className="text-center text-blue-600">Loading...</p>}
@@ -183,7 +170,6 @@ export default function PersonalInfoForm() {
                   value={formData[id]}
                   onChange={(val) => handleFieldChange(id, val)}
                 />
-                
                 {customFieldIds.includes(id) && (
                   <Button
                     variant="ghost"
@@ -198,7 +184,6 @@ export default function PersonalInfoForm() {
             ))}
           </div>
 
-          {/* Add more fields UI */}
           <div className="mt-6 flex gap-2 items-center">
             <input
               type="text"
@@ -217,25 +202,22 @@ export default function PersonalInfoForm() {
               <option value="textarea">Textarea</option>
             </select>
             <Button onClick={addMoreField} variant="skyblue">
-              Add more fields
+              Add Field
             </Button>
           </div>
 
-          {/* Error message */}
-          {error && <p className="text-red-600 mt-4 text-sm font-medium">{error}</p>}
+          {error && <p className="text-red-600 mt-4 text-sm">{error}</p>}
 
-          {/* Navigation buttons */}
           <div className="mt-10 flex justify-between">
             <Button disabled variant="skyblue">
-              {`<- Back`}
+              ← Back
             </Button>
             <Button variant="skyblue" onClick={handleNext} disabled={loading}>
-              {loading ? "Saving..." : `Next ->`}
+              {loading ? "Saving..." : "Next →"}
             </Button>
           </div>
         </div>
 
-        {/* Right side: preview */}
         <div className="flex-1 border p-6 rounded-md shadow-sm bg-gray-50 dark:bg-gray-800 min-h-[50rem]">
           <ResumePreview isCompact />
         </div>

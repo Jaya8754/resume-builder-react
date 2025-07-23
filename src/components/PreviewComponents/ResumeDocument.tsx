@@ -63,8 +63,8 @@ interface ResumeData {
   }[];
   experience: {
     experienceType:string;
-    jobtitle: string;
-    companyname: string;
+    jobTitle: string;
+    companyName: string;
     location: string;
     startDate: string;
     endDate: string;
@@ -153,8 +153,8 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
               .filter((exp) => exp.experienceType === "Work")
               .map((exp, i) => (
                 <View key={`work-${i}`} style={{ marginBottom: 6 }}>
-                  <Text style={{ fontWeight: "bold" }}>{exp.jobtitle}</Text>
-                  <Text>{exp.companyname} — {exp.location}</Text>
+                  <Text style={{ fontWeight: "bold" }}>{exp.jobTitle}</Text>
+                  <Text>{exp.companyName} — {exp.location}</Text>
                   <Text style={styles.smallText}>{exp.startDate} - {exp.endDate}</Text>
                   {exp.responsibilities && <Text>{exp.responsibilities}</Text>}
                 </View>
@@ -170,8 +170,8 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
               .filter((exp) => exp.experienceType === "Internship")
               .map((exp, i) => (
                 <View key={`intern-${i}`} style={{ marginBottom: 6 }}>
-                  <Text style={{ fontWeight: "bold" }}>{exp.jobtitle}</Text>
-                  <Text>{exp.companyname} — {exp.location}</Text>
+                  <Text style={{ fontWeight: "bold" }}>{exp.jobTitle}</Text>
+                  <Text>{exp.companyName} — {exp.location}</Text>
                   <Text style={styles.smallText}>{exp.startDate} - {exp.endDate}</Text>
                   {exp.responsibilities && <Text>{exp.responsibilities}</Text>}
                 </View>

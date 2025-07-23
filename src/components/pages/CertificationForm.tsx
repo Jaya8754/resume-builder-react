@@ -9,6 +9,7 @@ import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 import { certificationInfoSchema } from "@/lib/CertificationsSchema";
 import { setCertifications } from "@/store/resumeSlice";
 import { Plus, Minus } from "lucide-react";
+import api from "@/api/api";
 
 export type CertificationInfo = {
   certificationName: string;
@@ -56,6 +57,9 @@ export default function CertificationForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
+
+
   const certificationsFromStore = useSelector(
     (state: RootState) => state.resume.currentResume.certifications
   );
@@ -87,21 +91,47 @@ export default function CertificationForm() {
   };
 
   const handleBack = () => {
-    navigate("/resume/project-info");
+    navigate(`/resume/${resumeId}/project-info`);
   };
 
-  const handleNext = () => {
-    const isValid = certifications.every((cert) => certificationInfoSchema.safeParse(cert).success);
+const handleNext = async () => {
+  const isValid = certifications.every((cert) => certificationInfoSchema.safeParse(cert).success);
 
-    if (!isValid) {
-      setError("Please fill all required fields correctly in each certification.");
-      return;
-    }
+  if (!isValid) {
+    setError("Please fill all required fields correctly in each certification.");
+    return;
+  }
 
-    setError("");
-    dispatch(setCertifications(certifications));
-    navigate("/resume/interest-info");
-  };
+  try {
+    if (!resumeId) throw new Error("Missing resume ID");
+
+    const transformedCertifications = certifications.map((cert) => ({
+      ...cert,
+      skillsCovered: Array.isArray(cert.skillsCovered)
+        ? cert.skillsCovered
+        : cert.skillsCovered.split(",").map((skill) => skill.trim()),
+    }));
+
+    await api.put(`/resumes/${resumeId}/certifications`, {
+      certifications: transformedCertifications,
+    });
+
+    const reduxCertifications = transformedCertifications.map((cert) => ({
+      ...cert,
+      skillsCovered: Array.isArray(cert.skillsCovered)
+        ? cert.skillsCovered.join(", ")
+        : cert.skillsCovered,
+    }));
+
+    dispatch(setCertifications(reduxCertifications));
+    navigate(`/resume/${resumeId}/interest-info`);
+  } catch (err) {
+    console.error("Failed to save certifications:", err);
+    setError("Failed to save certifications, please try again.");
+  }
+};
+
+
 
   return (
     <>

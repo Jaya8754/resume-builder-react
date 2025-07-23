@@ -15,21 +15,41 @@ export default function FinalResume() {
 
   const resumeData = useSelector((state: RootState) => state.resume.currentResume);
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
-  
+
   const userId = currentUser?.user?.id?.toString();
 
   const [downloadReady, setDownloadReady] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    if (!userId || !resumeData.id) return;
-    dispatch(saveCurrentResume({ userId, resumeId: resumeData.id }));
-    navigate("/dashboard");
+  const saveResume = async () => {
+    if (!userId || !resumeData.id) return false;
+    try {
+      setSaving(true);
+      await dispatch(saveCurrentResume({ userId, resumeId: resumeData.id }));
+      setSaving(false);
+      return true;
+    } catch {
+      setSaving(false);
+      return false;
+    }
   };
 
-  const handleDownload = () => {
-    if (!userId || !resumeData.id) return;
-    dispatch(saveCurrentResume({ userId, resumeId: resumeData.id }));
-    setDownloadReady(true);
+  const handleSave = async () => {
+    const saved = await saveResume();
+    if (saved) {
+      navigate("/dashboard");
+    } else {
+      alert("Failed to save resume. Please try again.");
+    }
+  };
+
+  const handleDownload = async () => {
+    const saved = await saveResume();
+    if (saved) {
+      setDownloadReady(true);
+    } else {
+      alert("Failed to save resume. Please try again.");
+    }
   };
 
   return (
@@ -44,8 +64,8 @@ export default function FinalResume() {
         </div>
 
         <div className="flex flex-row justify-center gap-4 mt-8">
-          <Button variant="skyblue" onClick={handleSave}>
-            Save
+          <Button variant="skyblue" onClick={handleSave} disabled={saving}>
+            {saving ? "Saving..." : "Save"}
           </Button>
 
           {downloadReady ? (
@@ -67,8 +87,8 @@ export default function FinalResume() {
               }
             </PDFDownloadLink>
           ) : (
-            <Button variant="skyblue" className="w-40" onClick={handleDownload}>
-              Save and Download
+            <Button variant="skyblue" className="w-40" onClick={handleDownload} disabled={saving}>
+              {saving ? "Saving..." : "Save and Download"}
             </Button>
           )}
         </div>
