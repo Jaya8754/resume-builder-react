@@ -40,4 +40,15 @@ export type CertificationInfo = { certificationName: string; issuer: string; iss
 export type InterestsInfo = string[];
 export type LanguageInfo = { language: string; level: string };
 
+export type ResumeData = PersonalInfo &
+  { aboutMe: AboutMe } & {
+    educations: EducationInfo[];
+    experiences: ExperienceInfo[];
+    skills: SkillsInfo;
+    projects: ProjectInfo[];
+    certifications: CertificationInfo[];
+    interests: InterestsInfo;
+    languages: LanguageInfo[];
+  };
+
 

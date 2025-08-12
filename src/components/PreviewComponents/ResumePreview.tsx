@@ -21,10 +21,8 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
 }) => {
   const currentResume = useSelector((state: RootState) => state.resume.currentResume);
 
-  // Use currentResume id or fallback to empty string to avoid undefined in URLs
   const resumeId = currentResume?.id ?? "";
 
-  // Merge currentResume and passed resumeData, fallback to empty object
   const resume: ResumeState = { ...currentResume, ...(resumeData || {}) };
 
   const safeResume: ResumeState = {
@@ -40,7 +38,6 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
   languages: resume.languages ?? [],
 };
 
-  // Destructure with safe defaults to avoid errors if any property is null/undefined
   const {
     personalInfo,
     aboutMe,

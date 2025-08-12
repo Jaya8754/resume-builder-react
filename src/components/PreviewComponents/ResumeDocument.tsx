@@ -1,35 +1,34 @@
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
-
-// Helvetica is built-in, so no need to register unless you're using a custom font
+import type { ResumeData } from "../interfaces/interfaces";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 32, // px-8 equivalent
-    fontSize: 12, // text-sm
+    padding: 32, 
+    fontSize: 12, 
     fontFamily: "Helvetica",
-    lineHeight: 1.5, // matches Tailwind’s leading-relaxed
-    color: "#374151", // Tailwind's gray-700
+    lineHeight: 1.5,
+    color: "#374151", 
   },
   section: {
-    marginBottom: 8, // mb-6
+    marginBottom: 8, 
   },
   header: {
-    fontSize: 34, // text-2xl
+    fontSize: 34, 
     fontWeight: "bold",
     marginBottom: 24,
   },
   subHeader: {
-    fontSize: 16, // text-xl
+    fontSize: 16,
     fontWeight: "semibold",
     marginBottom: 4,
     paddingBottom: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "#D1D5DB", // gray-300
+    borderBottomColor: "#D1D5DB", 
     borderBottomStyle: "solid",
   },
   smallText: {
     fontSize: 10,
-    color: "#6B7280", // Tailwind gray-500
+    color: "#6B7280",
   },
   text: {
     marginTop: 4,
@@ -42,7 +41,11 @@ const styles = StyleSheet.create({
   },
 });
 
-export const ResumeDocument = ({ resumeData }) => {
+interface ResumeDocumentProps {
+  resumeData: ResumeData;
+}
+
+export const ResumeDocument = ({ resumeData }: ResumeDocumentProps) => {
 const {
   fullName,
   jobTitle,
