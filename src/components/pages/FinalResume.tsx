@@ -1,25 +1,57 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import type { RootState, AppDispatch } from "@/store/store";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { toast } from "sonner"; 
+import { type RootState, type AppDispatch } from "@/store/store";
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
+import { ResumeDocument } from "@/components/PreviewComponents/ResumeDocument";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/HeaderComponents/Header";
-import { ResumeDocument } from "@/components/PreviewComponents/ResumeDocument";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { saveCurrentResume } from "@/store/resumeSlice";
-import { useState } from "react";
+import { saveCurrentResume, setCurrentResume } from "@/store/resumeSlice";
+import { useResumeData } from "@/hooks/resumeHooks";
 
 export default function FinalResume() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { resumeId } = useParams();
 
   const resumeData = useSelector((state: RootState) => state.resume.currentResume);
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
-
   const userId = currentUser?.user?.id?.toString();
 
   const [downloadReady, setDownloadReady] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const { data: fetchedResume } = useResumeData(resumeId || "");
+
+  useEffect(() => {
+    if (fetchedResume && fetchedResume.id !== resumeData.id) {
+      const transformedResume = {
+        ...fetchedResume,
+        personalInfo: {
+          fullName: fetchedResume.fullName || "",
+          jobTitle: fetchedResume.jobTitle || "",
+          email: fetchedResume.email || "",
+          phoneNumber: fetchedResume.phoneNumber || "",
+          location: fetchedResume.location || "",
+          linkedinProfile: fetchedResume.linkedinProfile || "",
+          portfolio: fetchedResume.portfolio || "",
+          profilePicture: fetchedResume.profilePicture || "",
+        },
+        aboutMe: { aboutMe: fetchedResume.aboutMe || fetchedResume.about_me || "" },
+        education: fetchedResume.educations || [],
+        experience: fetchedResume.experiences || [],
+        skills: fetchedResume.skills || [],
+        projects: fetchedResume.projects || [],
+        certifications: fetchedResume.certifications || [],
+        interests: fetchedResume.interests || [],
+        languages: fetchedResume.languages || [],
+      };
+
+      dispatch(setCurrentResume(transformedResume));
+    }
+  }, [fetchedResume, resumeData.id, dispatch]);
 
   const saveResume = async () => {
     if (!userId || !resumeData.id) return false;
@@ -37,9 +69,10 @@ export default function FinalResume() {
   const handleSave = async () => {
     const saved = await saveResume();
     if (saved) {
+      toast.success("Resume saved successfully.");
       navigate("/dashboard");
     } else {
-      alert("Failed to save resume. Please try again.");
+      toast.error("Failed to save resume. Please try again.");
     }
   };
 
@@ -47,15 +80,16 @@ export default function FinalResume() {
     const saved = await saveResume();
     if (saved) {
       setDownloadReady(true);
+      toast.success("Resume saved. Download ready!");
     } else {
-      alert("Failed to save resume. Please try again.");
+      toast.error("Failed to save resume. Please try again.");
     }
   };
 
   return (
     <>
-      <Header isLoggedIn={true} />
-      <div className="max-w-5xl pt-25 mx-auto p-6">
+      <Header isLoggedIn />
+      <div className="max-w-5xl pt-24 mx-auto p-6">
         <div
           id="resume-content"
           className="border rounded-md shadow-md p-4 bg-white dark:bg-gray-900"

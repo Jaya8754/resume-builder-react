@@ -5,7 +5,7 @@ type UserDetails = {
   id: number;
   name: string;
   email: string;
-  password: string;
+  // password?: string;
 }
 
 export type User = {

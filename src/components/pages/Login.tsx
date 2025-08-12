@@ -2,8 +2,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "@/lib/validation";
-import type { LoginFormType } from "@/lib/validation";
+import { loginSchema } from "@/Schema/validation";
+import type { LoginFormType } from "@/Schema/validation";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/HeaderComponents/Header";
 import {

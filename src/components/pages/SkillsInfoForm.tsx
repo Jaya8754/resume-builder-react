@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react"; 
 import { Button } from "@/components/ui/button";
 import Header from "@/components/HeaderComponents/Header";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/store/store";
+import { useUpdateSkills, useResumeData } from "@/hooks/resumeHooks";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Skeleton } from "../ui/skeleton";
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
-import { skillsSchema } from "@/lib/SkillsSchema";
+import { skillsSchema } from "@/Schema/SkillsSchema";
 import { CreatableMultiSelect } from "@/components/ui/CreatableMultiSelect";
 import { setSkills } from "@/store/resumeSlice";  
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
-import api from "@/api/api";
 
 const availableSkills = [
   "HTML", "CSS", "JavaScript", "TypeScript", "React", "Next.js", "Vue.js", "Angular",
@@ -31,43 +32,69 @@ const availableSkills = [
 export default function SkillsForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { resumeId } = useParams<{ resumeId: string }>();
+  const { data: resumeData, isLoading } = useResumeData(resumeId ?? "");
 
-  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
-  const skillsFromStore = useSelector((state: RootState) => state.resume.currentResume.skills);
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(skillsFromStore || []);
+  const updateSkills = useUpdateSkills(resumeId ?? "");
+
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [status, setStatus] = useState({ error: "", loading: false });
 
   useEffect(() => {
-  setSelectedSkills(skillsFromStore || []);
-  }, [skillsFromStore]);
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+    if (resumeData?.skills && resumeData.skills.length) {
+      setSelectedSkills(resumeData.skills);
+      dispatch(setSkills(resumeData.skills));
+    } else {
+      setSelectedSkills([]);
+      dispatch(setSkills([]));
+    }
+  }, [resumeData, dispatch]);
+
+    const handleBlur = () => {
+  const result = skillsSchema.safeParse({ skills: selectedSkills });
+  setFormErrors({
+    skills: result.success ? "" : result.error.errors[0]?.message || "",
+  });
+};
 
   const handleBack = () => navigate(`/resume/${resumeId}/experience-info`);
 
   const handleNext = async () => {
     const result = skillsSchema.safeParse({ skills: selectedSkills });
+
     if (!result.success) {
-      console.log(result.error.format());
-      setError("Please fill all required fields correctly.");
+      const zodErrors = result.error.format();
+      const extractedErrors: { [key: string]: string } = {};
+
+      for (const key in zodErrors) {
+        const fieldKey = key as keyof typeof zodErrors;
+
+        if (fieldKey !== "_errors" && zodErrors[fieldKey]?._errors?.length) {
+          extractedErrors[fieldKey] = zodErrors[fieldKey]!._errors[0];
+        }
+      }
+
+      setFormErrors(extractedErrors);
+      toast.error(
+        `Please fill in the required fields`
+      );
       return;
     }
 
+    setFormErrors({});
+    setStatus({ error: "", loading: true });
+
     try {
-      setLoading(true);
-      setError("");
-
-      await api.put(`/resumes/${resumeId}/skills`, {
-        skills: selectedSkills,
-      });
-
+      await updateSkills.mutateAsync({ skills: selectedSkills });
       dispatch(setSkills(selectedSkills));
+      toast.success("Skills saved successfully!");
       navigate(`/resume/${resumeId}/project-info`);
     } catch (err) {
       console.error("Failed to save skills:", err);
-      setError("Failed to save skills, please try again.");
+      toast.error("Failed to save skills, please try again.");
     } finally {
-      setLoading(false);
+      setStatus((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -84,7 +111,11 @@ export default function SkillsForm() {
             Select the skills you want to showcase on your resume.
           </p>
 
-          {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
+          {isLoading ? (
+            <Skeleton className="h-6 w-40 mx-auto mb-6" />
+          ) : null}
+
+          {status.error && <p className="text-red-600 text-sm mb-4">{status.error}</p>}
 
           <Label htmlFor="skills">Choose Skills<span className="text-red-600">*</span></Label>
           <div className="mt-3">
@@ -93,10 +124,16 @@ export default function SkillsForm() {
                 onChange={(val) => {
                   const parsed = val.split(",").map((s) => s.trim()).filter(Boolean);
                   setSelectedSkills(parsed);
-                  dispatch(setSkills(parsed)); 
+                  dispatch(setSkills(parsed));
+                  const result = skillsSchema.safeParse({ skills: parsed });
+                  setFormErrors({
+                    skills: result.success ? "" : result.error.errors[0]?.message || "",
+                  });
                 }}
                 options={availableSkills}
                 placeholder="Type or select skills"
+                onBlur={() => handleBlur()}
+                error={formErrors["skills"]}
               />
 
           </div>
@@ -105,8 +142,8 @@ export default function SkillsForm() {
             <Button variant="outline" onClick={handleBack}>
               {"<- Back"}
             </Button>
-            <Button variant="skyblue" onClick={handleNext} disabled={loading}>
-              {loading ? "Saving..." : "Next ->"}
+            <Button variant="skyblue" onClick={handleNext} disabled={status.loading}>
+              {status.loading ? "Saving..." : "Next ->"}
             </Button>
           </div>
         </div>

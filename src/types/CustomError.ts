@@ -3,5 +3,6 @@ export type CustomError = Error & {
     timestamp: string,
     path: string,
     message: string,
-    errors: null | {[key: string]: any}
+    // eslint-disable-next-line
+    errors: null | {[key: string]: any} 
 };

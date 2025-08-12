@@ -1,6 +1,6 @@
 import { Toggle } from "@/components/ui/toggle";
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext"; // adjust path
+import { useTheme } from "@/context/ThemeProvider"; // adjust path
 
 function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();

@@ -1,22 +1,17 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import type { RootState } from "@/store/store";
+import { useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { useUpdateCertifications, useResumeData } from '@/hooks/resumeHooks';
+import { Skeleton } from "../ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/HeaderComponents/Header";
-import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
+import { FormFieldRenderer } from "@/components/InputFields/FormFieldRenderer";
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
-import { certificationInfoSchema } from "@/lib/CertificationsSchema";
+import { certificationInfoSchema, baseCertificationSchema } from "@/Schema/CertificationsSchema";
 import { setCertifications } from "@/store/resumeSlice";
 import { Plus, Minus } from "lucide-react";
-import api from "@/api/api";
-
-export type CertificationInfo = {
-  certificationName: string;
-  issuer: string;
-  issuedDate: string;
-  skillsCovered: string;
-};
+import type { CertificationInfo } from "@/components/interfaces/interfaces";
 
 const initialFields = [
   { id: "certificationName", label: "Certificate Name", type: "text", required: true },
@@ -50,88 +45,146 @@ const createEmptyCertificate = (): CertificationInfo => ({
   certificationName: "",
   issuer: "",
   issuedDate: "",
-  skillsCovered: "",
+  skillsCovered: [],
 });
 
 export default function CertificationForm() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { resumeId } = useParams<{ resumeId: string }>();
 
-  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
+  const { data: resumeData, isLoading } = useResumeData(resumeId ?? "");
+  const updateCertifications = useUpdateCertifications(resumeId ?? "");
 
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [status, setStatus] = useState({ error: "", loading: false });
+  const [certifications, setCertificationList] = useState<CertificationInfo[]>([createEmptyCertificate()]);
 
-  const certificationsFromStore = useSelector(
-    (state: RootState) => state.resume.currentResume.certifications
-  );
-
-  const [certifications, setCertificationList] = useState<CertificationInfo[]>(
-    certificationsFromStore.length > 0 ? certificationsFromStore : [createEmptyCertificate()]
-  );
-
-  const [error, setError] = useState("");
+  const isCertificateEmpty = (cert: CertificationInfo) =>
+    !cert.certificationName.trim() &&
+    !cert.issuer.trim() &&
+    !cert.issuedDate.trim() &&
+    (!Array.isArray(cert.skillsCovered) || cert.skillsCovered.length === 0);
 
   useEffect(() => {
-    dispatch(setCertifications(certifications));
-  }, [certifications, dispatch]);
+    if (resumeData?.certifications && resumeData.certifications.length > 0) {
+      setCertificationList(
+        resumeData.certifications.map((cert: CertificationInfo) => ({
+          ...cert,
+          skillsCovered: Array.isArray(cert.skillsCovered)
+            ? cert.skillsCovered
+            : cert.skillsCovered?.split(",").map((s: string) => s.trim()) || [],
+        }))
 
-  const handleFieldChange = (index: number, id: keyof CertificationInfo, value: string) => {
-    const updatedList = [...certifications];
-    updatedList[index] = { ...updatedList[index], [id]: value };
+      );
+      dispatch(setCertifications(resumeData.certifications));
+    } else {
+      setCertificationList([createEmptyCertificate()]);
+      dispatch(setCertifications([createEmptyCertificate()]));
+    }
+  }, [resumeData, dispatch]);
+
+  const handleFieldChange = (index: number, id: keyof CertificationInfo, value: string | string[]) => {
+    const updatedList = certifications.map((cert, i) =>
+      i === index
+        ? { ...cert, [id]: id === "skillsCovered" && typeof value === "string"
+            ? value.split(",").map(v => v.trim()).filter(Boolean)
+            : value }
+        : cert
+    );
     setCertificationList(updatedList);
+    dispatch(setCertifications(updatedList));
   };
 
-  const handleAddCertificate = () => {
-    setCertificationList((prev) => [...prev, createEmptyCertificate()]);
+  const handleBlur = (index: number, fieldId: keyof CertificationInfo) => {
+    const cert = certifications[index];
+    const isEmpty = isCertificateEmpty(cert);
+
+    if (isEmpty) {
+      setFormErrors(prev => {
+        const updated = { ...prev };
+        delete updated[`certificationName-${index}`];
+        delete updated[`issuer-${index}`];
+        delete updated[`issuedDate-${index}`];
+        delete updated[`skillsCovered-${index}`];
+        return updated;
+      });
+      return;
+    }
+
+    const singleFieldSchema = baseCertificationSchema.shape[fieldId];
+    if (singleFieldSchema) {
+      const result = singleFieldSchema.safeParse(cert[fieldId]);
+      setFormErrors(prev => ({
+        ...prev,
+        [`${fieldId}-${index}`]: result.success ? "" : result.error.errors[0]?.message || "",
+      }));
+    }
   };
 
-  const handleRemoveCertificate = (index: number) => {
-    if (certifications.length === 1) return;
-    const updatedList = certifications.filter((_, i) => i !== index);
-    setCertificationList(updatedList);
-  };
-
-  const handleBack = () => {
-    navigate(`/resume/${resumeId}/project-info`);
-  };
-
-const handleNext = async () => {
-  const isValid = certifications.every((cert) => certificationInfoSchema.safeParse(cert).success);
-
-  if (!isValid) {
-    setError("Please fill all required fields correctly in each certification.");
-    return;
-  }
-
-  try {
-    if (!resumeId) throw new Error("Missing resume ID");
-
-    const transformedCertifications = certifications.map((cert) => ({
-      ...cert,
-      skillsCovered: Array.isArray(cert.skillsCovered)
-        ? cert.skillsCovered
-        : cert.skillsCovered.split(",").map((skill) => skill.trim()),
-    }));
-
-    await api.put(`/resumes/${resumeId}/certifications`, {
-      certifications: transformedCertifications,
+  const handleAddCertificate = () =>
+    setCertificationList(prev => {
+      const updated = [...prev, createEmptyCertificate()];
+      dispatch(setCertifications(updated));
+      return updated;
     });
 
-    const reduxCertifications = transformedCertifications.map((cert) => ({
-      ...cert,
-      skillsCovered: Array.isArray(cert.skillsCovered)
-        ? cert.skillsCovered.join(", ")
-        : cert.skillsCovered,
-    }));
+  const handleRemoveCertificate = (index: number) =>
+    setCertificationList(prev => {
+      if (prev.length === 1) return prev;
+      const updated = prev.filter((_, i) => i !== index);
+      dispatch(setCertifications(updated));
+      return updated;
+    });
 
-    dispatch(setCertifications(reduxCertifications));
-    navigate(`/resume/${resumeId}/interest-info`);
-  } catch (err) {
-    console.error("Failed to save certifications:", err);
-    setError("Failed to save certifications, please try again.");
-  }
-};
+  const handleBack = () => navigate(`/resume/${resumeId}/project-info`);
 
+  const handleNext = async () => {
+    const filteredCertificates = certifications.filter(c => !isCertificateEmpty(c));
 
+    if (filteredCertificates.length === 0) {
+      toast.success("Certifications skipped successfully!");
+      navigate(`/resume/${resumeId}/interest-info`);
+      return;
+    }
+
+    for (let i = 0; i < filteredCertificates.length; i++) {
+      const cert = filteredCertificates[i];
+      const result = certificationInfoSchema.safeParse(cert);
+
+      if (!result.success) {
+        const zodErrors = result.error.format();
+        const extractedErrors: { [key: string]: string } = {};
+
+        for (const key in zodErrors) {
+          const fieldKey = key as keyof typeof zodErrors;
+          if (fieldKey !== "_errors" && zodErrors[fieldKey]?._errors?.length) {
+            extractedErrors[`${fieldKey}-${i}`] = zodErrors[fieldKey]!._errors[0];
+          }
+        }
+
+        setFormErrors(extractedErrors);
+        toast.error(`Please fill in the required fields`);
+        return;
+      }
+    }
+
+    setFormErrors({});
+    setStatus({ error: "", loading: true });
+
+    try {
+      if (!resumeId) throw new Error("Missing resume ID");
+      await updateCertifications.mutateAsync(filteredCertificates);
+      dispatch(setCertifications(filteredCertificates));
+      toast.success("Certifications saved successfully!");
+      navigate(`/resume/${resumeId}/interest-info`);
+    } catch (err) {
+      console.error("Failed to save certifications:", err);
+      toast.error("Failed to save certifications, please try again.");
+    } finally {
+      setStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
 
   return (
     <>
@@ -145,6 +198,12 @@ const handleNext = async () => {
               <Plus className="w-5 h-5" />
             </Button>
           </div>
+
+          {isLoading && <Skeleton className="h-6 w-40 mx-auto mb-6" />}
+
+          <p className="text-sm text-gray-600 mb-4">
+            You may skip this section by leaving all fields empty. Only filled certificates will be saved.
+          </p>
 
           {certifications.map((formData, idx) => (
             <div key={idx} className="mb-6 border rounded p-4 relative">
@@ -171,16 +230,25 @@ const handleNext = async () => {
                     label={label}
                     type={type as "text" | "textarea" | "date" | "multi-select-with-tags"}
                     required={required}
-                    value={formData[id as keyof CertificationInfo] || ""}
+                    value={
+                      id === "skillsCovered"
+                        ? Array.isArray(formData.skillsCovered)
+                          ? formData.skillsCovered.join(", ")
+                          : formData.skillsCovered || ""
+                        : (formData[id as keyof CertificationInfo] as string) || ""
+                    }
+
                     onChange={(val) => handleFieldChange(idx, id as keyof CertificationInfo, val)}
                     options={options || []}
+                    onBlur={() => handleBlur(idx, id as keyof CertificationInfo)}
+                    error={formErrors[`${id}-${idx}`]}
                   />
                 ))}
               </div>
             </div>
           ))}
 
-          {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+          {status.error && <p className="text-red-600 text-sm mt-2">{status.error}</p>}
 
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={handleBack}>

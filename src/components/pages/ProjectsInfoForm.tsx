@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import type { RootState } from "@/store/store";
-import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { Skeleton } from "../ui/skeleton";
+import { useUpdateProjects, useResumeData } from '@/hooks/resumeHooks';
 import { Button } from "@/components/ui/button";
 import Header from "@/components/HeaderComponents/Header";
-import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
+import { FormFieldRenderer } from "@/components/InputFields/FormFieldRenderer";
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
-import { projectInfoShema } from "@/lib/ProjectSchema";
+import { projectInfoShema, baseProjectSchema } from "@/Schema/ProjectSchema";
 import { setProjects } from "@/store/resumeSlice";
 import { Plus, Minus } from "lucide-react";
-import api from "@/api/api";
+
 
 export type ProjectInfo = {
   projectTitle: string;
@@ -30,28 +32,73 @@ export default function ProjectInfoForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
+  const { resumeId } = useParams<{ resumeId: string }>();
 
-  const projectFromStore = useSelector(
-    (state: RootState) => state.resume.currentResume.projects
-  );
+  const { data: resumeData, isLoading } = useResumeData(resumeId ?? "");
 
-  const [projectList, setProjectList] = useState<ProjectInfo[]>(
-    projectFromStore.length > 0 ? projectFromStore : [createEmptyProject()]
-  );
+  const updateProjects = useUpdateProjects(resumeId ?? "");
 
-  const [error, setError] = useState("");
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [status, setStatus] = useState({ error: "", loading: false });
+
+
+  const [projectList, setProjectList] = useState<ProjectInfo[]>([createEmptyProject()]);
+
 
   useEffect(() => {
-    dispatch(setProjects(projectList));
-  }, [projectList, dispatch]);
+    if (resumeData?.projects && resumeData.projects.length > 0) {
+      setProjectList(resumeData.projects);
+      dispatch(setProjects(resumeData.projects));
+    } else {
+      setProjectList([createEmptyProject()]);
+      dispatch(setProjects([createEmptyProject()]));
+    }
+  }, [resumeData, dispatch]);
 
-  const handleFieldChange = (formIndex: number, fieldId: keyof ProjectInfo, value: string) => {
-    const updatedList = projectList.map((item, i) =>
-      i === formIndex ? { ...item, [fieldId]: value } : item
-    );
-    setProjectList(updatedList);
+  const handleFieldChange = (
+  index: number,
+  fieldId: keyof ProjectInfo,
+  value: string
+) => {
+  const updatedProjects = [...projectList];
+  updatedProjects[index] = {
+    ...updatedProjects[index],
+    [fieldId]: value,
   };
+
+  setProjectList(updatedProjects);
+  dispatch(setProjects(updatedProjects)); 
+};
+
+  const isProjectEmpty = (project: ProjectInfo) =>
+  !project.projectTitle.trim() && !project.description.trim();
+
+
+  const handleBlur = (index: number, fieldId: keyof ProjectInfo) => {
+    const project = projectList[index];
+    const isEmpty = isProjectEmpty(project);
+
+    if (isEmpty) {
+      setFormErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[`projectTitle-${index}`];
+        delete updated[`description-${index}`];
+        return updated;
+      });
+      return;
+    }
+
+    const singleFieldSchema = baseProjectSchema.shape[fieldId];
+
+    if (singleFieldSchema) {
+      const result = singleFieldSchema.safeParse(project[fieldId]);
+      setFormErrors((prev) => ({
+        ...prev,
+        [`${fieldId}-${index}`]: result.success ? "" : result.error.errors[0]?.message || "",
+      }));
+    }
+  };
+
 
   const addProjectForm = () => {
     setProjectList((prev) => [...prev, createEmptyProject()]);
@@ -63,31 +110,53 @@ export default function ProjectInfoForm() {
   };
 
   const handleNext = async () => {
-    for (const project of projectList) {
-      const result = projectInfoShema.safeParse(project);
-      if (!result.success) {
-        setError("Please fill all required fields correctly.");
-        return;
+
+  const filteredProjects = projectList.filter((p) => !isProjectEmpty(p));
+
+  if (filteredProjects.length === 0) {
+    toast.success("Projects skipped successfully!");
+    navigate(`/resume/${resumeId}/certificate-info`);
+    return; 
+  }
+
+  for (let i = 0; i < filteredProjects.length; i++) {
+    const project = filteredProjects[i];
+    const result = projectInfoShema.safeParse(project);
+
+    if (!result.success) {
+      const zodErrors = result.error.format();
+      const extractedErrors: { [key: string]: string } = {};
+
+      for (const key in zodErrors) {
+        const fieldKey = key as keyof typeof zodErrors;
+        if (fieldKey !== "_errors" && zodErrors[fieldKey]?._errors?.length) {
+          extractedErrors[`${fieldKey}-${i}`] = zodErrors[fieldKey]!._errors[0];
+        }
       }
+
+      setFormErrors(extractedErrors);
+      toast.error(`Please fill in the required fields`);
+      return;
     }
+  }
 
-    try {
-      if (!resumeId) throw new Error("Missing resume ID");
-      setError("");
+  setFormErrors({});
+  setStatus({ error: "", loading: true });
 
-      await api.put(`/resumes/${resumeId}/projects`, {
-        projects: projectList,
-      });
+  try {
+    if (!resumeId) throw new Error("Missing resume ID");
 
-      dispatch(setProjects(projectList));
-      navigate(`/resume/${resumeId}/certificate-info`);
-    } catch (err) {
-      console.error("Failed to save projects:", err);
-      setError("Failed to save projects, please try again.");
-    }
-  };
-
-
+    await updateProjects.mutateAsync({ projects: filteredProjects });
+    dispatch(setProjects(filteredProjects));
+    toast.success("Projects saved successfully!");
+    navigate(`/resume/${resumeId}/certificate-info`);
+  } catch (err) {
+    console.error("Failed to save projects:", err);
+    toast.error("Failed to save projects, please try again.");
+  } finally {
+    setStatus(prev => ({ ...prev, loading: false }));
+  }
+};
   const handleBack = () => navigate(`/resume/${resumeId}/skills-info`);
 
   return (
@@ -102,6 +171,15 @@ export default function ProjectInfoForm() {
               <Plus className="w-5 h-5" />
             </Button>
           </div>
+
+          {isLoading ? (
+            <Skeleton className="h-6 w-40 mx-auto mb-6" />
+          ) : null}
+
+          <p className="text-sm text-gray-600 mb-4">
+            You may skip this section by leaving all fields empty. Only filled projects will be saved.
+          </p>
+
 
           {projectList.map((formData, index) => (
             <div key={index} className="mb-6 border rounded p-4 relative">
@@ -130,13 +208,15 @@ export default function ProjectInfoForm() {
                     required={required}
                     value={formData[id as keyof ProjectInfo] || ""}
                     onChange={(val) => handleFieldChange(index, id as keyof ProjectInfo, val)}
+                    error={formErrors[`${id}-${index}`]}
+                    onBlur={() => handleBlur(index, id as keyof ProjectInfo)}
                   />
                 ))}
               </div>
             </div>
           ))}
 
-          {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+          {status.error && <p className="text-red-600 text-sm mt-2">{status.error}</p>}
 
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={handleBack}>

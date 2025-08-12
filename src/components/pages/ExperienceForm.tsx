@@ -1,27 +1,17 @@
-import { useState } from "react";
-import  { useEffect } from "react";
-import { FormFieldRenderer } from "@/components/pages/FormFieldRenderer";
+import { useState, useEffect } from "react";
+import { FormFieldRenderer } from "@/components/InputFields/FormFieldRenderer";
 import { Button } from "@/components/ui/button";
+import { useUpdateExperience, useResumeData } from "@/hooks/resumeHooks";
 import Header from "@/components/HeaderComponents/Header";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { toast } from "sonner";
+import { Skeleton } from "../ui/skeleton";
 import { setExperience } from "@/store/resumeSlice"; 
-import type { RootState } from "@/store/store";
-import api from "@/api/api";
-import { useNavigate } from "react-router-dom";
-import { experienceInfoSchema } from "@/lib/ExperienceInfoSchema";
+import { useNavigate, useParams } from "react-router-dom";
+import { experienceInfoSchema } from "@/Schema/ExperienceInfoSchema";
 import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
 import { Plus, Minus } from "lucide-react";
-
-export type ExperienceInfo = {
-  experienceType: string;
-  jobTitle: string;
-  companyName: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  responsibilities: string;
-  [key: string]: string;
-};
+import type { ExperienceInfo } from "@/components/interfaces/interfaces";
 
 const initialFields = [
   { id: "experienceType", label: "Work/Internship", type: "select", required: true, options: ["--Select--", "Work", "Internship"] },
@@ -30,90 +20,160 @@ const initialFields = [
   { id: "location", label: "Location", type: "text", required: true },
   { id: "startDate", label: "Start Date", type: "date", required: true },
   { id: "endDate", label: "End Date", type: "date" },
-  { id: "responsibilities", label: "Responsibilities", type: "textarea" },
+  { id: "responsibilities", label: "Responsibilities", type: "textarea", required: true },
 ];
 
 const createEmptyExperience = () =>
   Object.fromEntries(initialFields.map((f) => [f.id, ""])) as ExperienceInfo;
 
 export default function ExperienceForm() {
-  const experienceFromStore = useSelector((state: RootState) => state.resume.currentResume.experience);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [experienceList, setExperienceList] = useState<ExperienceInfo[]>(
-    experienceFromStore.length > 0 ? experienceFromStore : [createEmptyExperience()]
-  );
+  const [formErrors, setFormErrors] = useState<{
+  [index: number]: Partial<Record<keyof ExperienceInfo, string | undefined>>;
+  }>({});
 
-    useEffect(() => {
-    dispatch(setExperience(experienceList));
-  }, [experienceList, dispatch]);
+  const [status, setStatus] = useState({ error: "", loading: false });
+  
+  const { resumeId } = useParams<{ resumeId: string }>();
+  const { data: resumeData, isLoading  } = useResumeData(resumeId ?? "");
 
+
+  const updateExperience = useUpdateExperience(resumeId ?? "");
+
+  const [experienceList, setExperienceList] = useState<ExperienceInfo[]>([]);
+
+  useEffect(() => {
+  if (resumeData?.experiences?.length) {
+    setExperienceList(resumeData.experiences);
+  } else {
+    setExperienceList([createEmptyExperience()]);
+  }
+}, [resumeData]);
 
   const handleFieldChange = (index: number, id: string, value: string) => {
     const updatedList = experienceList.map((item, i) =>
       i === index ? { ...item, [id]: value } : item
     );
     setExperienceList(updatedList);
+    dispatch(setExperience(updatedList));
+
+    if (id === "experienceType" && value === "--Select--") {
+      setFormErrors((prevErrors) => ({
+        ...prevErrors,
+        [index]: {},
+      }));
+    }
   };
 
+
+  const handleBlur = (index: number, fieldId: keyof ExperienceInfo, value: string) => {
+    const currentExperience = experienceList[index];
+    const updatedExperience = { ...currentExperience, [fieldId]: value };
+
+    const result = experienceInfoSchema.safeParse(updatedExperience);
+
+    if (!result.success) {
+      const fieldErrors = result.error.formErrors.fieldErrors as Record<keyof ExperienceInfo, string[] | undefined>;
+      const fieldError = fieldErrors[fieldId]?.[0];
+
+      setFormErrors((prevErrors) => ({
+        ...prevErrors,
+        [index]: {
+          ...prevErrors?.[index],
+          [fieldId]: fieldError,
+        },
+      }));
+    } else {
+      setFormErrors((prevErrors) => ({
+        ...prevErrors,
+        [index]: {
+          ...prevErrors?.[index],
+          [fieldId]: undefined,
+        },
+      }));
+    }
+  };
+
+
   const addExperienceForm = () => {
-    setExperienceList((prev) => [...prev, createEmptyExperience()]);
+    const newList = [...experienceList, createEmptyExperience()];
+    setExperienceList(newList);
+    dispatch(setExperience(newList));
   };
 
   const removeExperienceForm = (index: number) => {
-    if (experienceList.length === 1) return; 
-    const updatedList = experienceList.filter((_, i) => i !== index);
-    setExperienceList(updatedList);
+    if (experienceList.length === 1) return;
+      const newList = experienceList.filter((_, i) => i !== index);
+      setExperienceList(newList);
+      dispatch(setExperience(newList));
   };
 
   const handleBack = () => {
     navigate(`/resume/${resumeId}/educational-info`);
   };
 
-  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
+  const handleNext = async () => {
+  let hasErrors = false;
+  const newFormErrors: typeof formErrors = {};
 
-const handleNext = async () => {
-  for (const experience of experienceList) {
-    const result = experienceInfoSchema.safeParse(experience);
+  const validExperiences = experienceList.filter(
+    (exp) => exp.experienceType === "Work" || exp.experienceType === "Internship"
+  );
+
+  if (validExperiences.length === 0) {
+
+    try {
+      await updateExperience.mutateAsync([]);
+      dispatch(setExperience([]));
+      navigate(`/resume/${resumeId}/skills-info`);
+      toast.success("Experience section skipped.");
+    } catch (error) {
+      console.log(error)
+      toast.error("Something went wrong while skipping experience.");
+    }
+    return;
+  }
+
+  experienceList.forEach((exp, index) => {
+    const result = experienceInfoSchema.safeParse(exp);
     if (!result.success) {
-      alert("Please fill all required fields correctly.");
-      return;
+      hasErrors = true;
+      const zodErrors = result.error.format();
+      const extracted: Partial<Record<keyof ExperienceInfo, string>> = {};
+
+      for (const [fieldKey, fieldError] of Object.entries(zodErrors)) {
+        if (fieldKey !== "_errors" && fieldError && "_errors" in fieldError && fieldError._errors.length) {
+          extracted[fieldKey as keyof ExperienceInfo] = fieldError._errors[0];
+        }
+      }
+
+      newFormErrors[index] = extracted;
     }
+
+  });
+
+  if (hasErrors) {
+    setFormErrors(newFormErrors);
+    toast.error("Please fill in the required fields");
+    return;
   }
 
-  dispatch(setExperience(experienceList));
-
-  const transformedExperiences = experienceList.map(exp => ({
-    experienceType: exp.experienceType,
-    jobTitle: exp.jobTitle,     
-    companyName: exp.companyName,
-    location: exp.location,
-    startDate: exp.startDate,
-    endDate: exp.endDate,
-    responsibilities: exp.responsibilities.trim(),
-  }));
-
-  for (const exp of transformedExperiences) {
-    if (!exp.jobTitle) {
-      alert("Job Title cannot be empty.");
-      return;
-    }
-    if (!exp.companyName) {
-      alert("Company Name cannot be empty.");
-      return;
-    }
-  }
+  setFormErrors({});
+  setStatus({ error: "", loading: true });
 
   try {
-    await api.put(`/resumes/${resumeId}/experiences`, {
-      experiences: transformedExperiences,
-    });
-
+    await updateExperience.mutateAsync(validExperiences);
+    dispatch(setExperience(validExperiences));
     navigate(`/resume/${resumeId}/skills-info`);
+    toast.success("Experience saved.");
   } catch (error) {
-    console.error("Failed to update experience:", error);
-    alert("An error occurred while saving experience. Please try again.");
+    console.log(error)
+    toast.error("Failed to save experience.");
+  } finally {
+    setStatus((prev) => ({ ...prev, loading: false }));
   }
 };
 
@@ -130,6 +190,10 @@ const handleNext = async () => {
               <Plus className="w-5 h-5" />
             </Button>
           </div>
+
+          {isLoading ? (
+            <Skeleton className="h-6 w-40 mx-auto mb-6" />
+          ) : null}
 
           {experienceList.map((formData, index) => (
             <div key={index} className="mb-6 border rounded p-4 relative">
@@ -149,9 +213,15 @@ const handleNext = async () => {
               </div>
 
               <div className="space-y-4">
-                {initialFields.map(({ id, label, type, required, options }) => (
+              {initialFields.map(({ id, label, type, required, options }) => (
+                <div key={`${index}-${id}`}>
+                  {id === "experienceType" && (
+                    <p className="text-xs text-gray-500 mb-1">
+                      If you don’t have any work or internship experience, select <strong>--Select--</strong> to skip this section.
+                    </p>
+                  )}
+
                   <FormFieldRenderer
-                    key={`${index}-${id}`}
                     id={id}
                     label={label}
                     type={type as "text" | "textarea" | "select" | "date"}
@@ -159,18 +229,28 @@ const handleNext = async () => {
                     value={formData[id]}
                     onChange={(val) => handleFieldChange(index, id, val)}
                     options={options || []}
+                    onBlur={() => {
+                      if (index < experienceList.length) {
+                        handleBlur(index, id as keyof ExperienceInfo, formData[id]);
+                      }
+                    }}
+                    error={formErrors[index]?.[id as keyof ExperienceInfo]}
                   />
-                ))}
+                </div>
+              ))}
+
               </div>
             </div>
           ))}
+
+          {status.error && <p className="text-red-600 mt-4 text-sm">{status.error}</p>}
 
           <div className="mt-6 flex justify-between">
             <Button variant="outline" onClick={handleBack}>
               {"<- Back"}
             </Button>
-            <Button variant="skyblue" onClick={handleNext}>
-              {"Next ->"}
+            <Button variant="skyblue" onClick={handleNext} disabled={status.loading}>
+              {status.loading ? "Saving..." : "Next →"}
             </Button>
           </div>
         </div>

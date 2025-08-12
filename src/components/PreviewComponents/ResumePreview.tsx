@@ -1,13 +1,16 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
-import type { ResumeState } from "@/store/resumeSlice";
+import type {
+  PersonalInfo
+} from "@/components/interfaces/interfaces";
+ import {type ResumeState } from "@/store/resumeSlice";
 import { Edit } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ResumePreviewProps {
   isCompact?: boolean;
-  resumeData?: ResumeState;
+  resumeData?: Partial<ResumeState>;
   showEditLinks?: boolean;
 }
 
@@ -16,13 +19,28 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
   isCompact,
   showEditLinks,
 }) => {
-
   const currentResume = useSelector((state: RootState) => state.resume.currentResume);
 
-  const resumeId = useSelector((state: RootState) => state.resume.currentResume.id);
-  
-  const resume: ResumeState = { ...currentResume, ...resumeData };
+  // Use currentResume id or fallback to empty string to avoid undefined in URLs
+  const resumeId = currentResume?.id ?? "";
 
+  // Merge currentResume and passed resumeData, fallback to empty object
+  const resume: ResumeState = { ...currentResume, ...(resumeData || {}) };
+
+  const safeResume: ResumeState = {
+  ...resume,
+  personalInfo: resume.personalInfo ?? ({} as PersonalInfo),
+  aboutMe: resume.aboutMe ?? { aboutMe: "" },
+  education: resume.education ?? [],
+  experience: resume.experience ?? [],
+  skills: resume.skills ?? [],
+  projects: resume.projects ?? [],
+  certifications: resume.certifications ?? [],
+  interests: resume.interests ?? [],
+  languages: resume.languages ?? [],
+};
+
+  // Destructure with safe defaults to avoid errors if any property is null/undefined
   const {
     personalInfo,
     aboutMe,
@@ -33,12 +51,13 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
     certifications,
     interests,
     languages,
-  } = resume;
+  } = safeResume;
+
 
   const sectionClass = isCompact ? "mb-4 text-sm" : "mb-6";
 
   const renderEditLink = (path: string) =>
-    showEditLinks && (
+    showEditLinks ? (
       <Link
         to={path}
         className="text-blue-500 hover:text-blue-700 float-right no-print no-pdf"
@@ -46,10 +65,14 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       >
         <Edit className="w-4 h-4" />
       </Link>
-    );
+    ) : null;
 
   return (
-    <div className={`p-4 ${isCompact ? "max-h-[1000vh] overflow-y-auto" : "max-w-3xl mx-auto"}`}>
+    <div
+      className={`p-4 ${
+        isCompact ? "max-h-[1000vh] overflow-y-auto" : "max-w-3xl mx-auto"
+      }`}
+    >
       {/* Personal Info */}
       <section className={sectionClass}>
         <h1 className="text-2xl font-bold">
@@ -58,10 +81,13 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
         </h1>
         <p className="text-lg text-gray-700">{personalInfo.jobTitle || "Job Title"}</p>
         <p className="text-sm text-gray-600">
-          {personalInfo.email} | {personalInfo.phoneNumber} | {personalInfo.location}
+          {personalInfo.email || "-"} | {personalInfo.phoneNumber || "-"} |{" "}
+          {personalInfo.location || "-"}
         </p>
         {personalInfo.linkedinProfile && (
-          <p className="text-sm text-gray-600">LinkedIn: {personalInfo.linkedinProfile}</p>
+          <p className="text-sm text-gray-600">
+            LinkedIn: {personalInfo.linkedinProfile}
+          </p>
         )}
         {personalInfo.portfolio && (
           <p className="text-sm text-gray-600">Portfolio: {personalInfo.portfolio}</p>
@@ -98,33 +124,24 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       )}
 
       {/* Experience */}
-      {experience.length > 0 &&
-        experience.some(
-          (exp) => exp.experienceType === "Internship" || exp.experienceType === "Work"
-        ) && (
-          <section className={sectionClass}>
-            <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
-              {experience[0].experienceType === "Internship" || experience[0].experienceType === "Work" ? "Experience" : ""}
-              {renderEditLink(`/resume/${resumeId}/experience-info`)}
-            </h2>
-
-            {experience
-              .filter(
-                (exp) =>
-                  exp.experienceType === "Internship" || exp.experienceType === "Work"
-              )
-              .map((exp, idx) => (
-                <div key={idx} className="mt-2">
-                  <strong>{exp.jobTitle}</strong>, {exp.companyName} — {exp.location}
-                  <div className="text-sm text-gray-600">
-                    {exp.startDate} - {exp.endDate}
-                  </div>
-                  {exp.responsibilities && <p className="mt-1">{exp.responsibilities}</p>}
+      {experience.length > 0 && experience.some(exp => exp.experienceType === "Internship" || exp.experienceType === "Work") && (
+        <section className={sectionClass}>
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Experience {renderEditLink(`/resume/${resumeId}/experience-info`)}
+          </h2>
+          {experience
+            .filter(exp => exp.experienceType === "Internship" || exp.experienceType === "Work")
+            .map((exp, idx) => (
+              <div key={idx} className="mt-2">
+                <strong>{exp.jobTitle}</strong>, {exp.companyName} — {exp.location}
+                <div className="text-sm text-gray-600">
+                  {exp.startDate} - {exp.endDate}
                 </div>
-              ))}
-          </section>
+                {exp.responsibilities && <p className="mt-1">{exp.responsibilities}</p>}
+              </div>
+            ))}
+        </section>
       )}
-
 
       {/* Skills */}
       {skills.length > 0 && (
@@ -137,44 +154,39 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
       )}
 
       {/* Projects */}
-      {projects.length > 0 &&
-        projects.every(
-          (proj) => proj.projectTitle.trim() !== "" 
-        ) && (
-          <section className={sectionClass}>
-            <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
-              Projects {renderEditLink(`/resume/${resumeId}/project-info`)}
-            </h2>
-            {projects.map((proj, idx) => (
+      {projects.length > 0 && projects.some(proj => proj.projectTitle.trim() !== "") && (
+        <section className={sectionClass}>
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Projects {renderEditLink(`/resume/${resumeId}/project-info`)}
+          </h2>
+          {projects
+            .filter(proj => proj.projectTitle.trim() !== "")
+            .map((proj, idx) => (
               <div key={idx} className="mt-2">
                 <strong>{proj.projectTitle}</strong>
                 <p>{proj.description}</p>
               </div>
             ))}
-          </section>
+        </section>
       )}
 
       {/* Certifications */}
-      {certifications.length > 0 && (
-        (() => {
-          const validCerts = certifications.filter(cert => cert.certificationName.trim() !== "");
-          return validCerts.length > 0 ? (
-            <section className={sectionClass}>
-              <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
-                Certifications {renderEditLink(`/resume/${resumeId}/certificate-info`)}
-              </h2>
-              {validCerts.map((cert, idx) => (
-                <div key={idx} className="mt-2">
-                  <strong>{cert.certificationName}</strong> — {cert.issuer}
-                  <div className="text-sm text-gray-600">{cert.issuedDate}</div>
-                  {cert.skillsCovered && <p>Skills Covered: {cert.skillsCovered}</p>}
-                </div>
-              ))}
-            </section>
-          ) : null;
-        })()
+      {certifications.length > 0 && certifications.some(cert => cert.certificationName.trim() !== "") && (
+        <section className={sectionClass}>
+          <h2 className="text-xl font-semibold border-b border-gray-300 pb-1">
+            Certifications {renderEditLink(`/resume/${resumeId}/certificate-info`)}
+          </h2>
+          {certifications
+            .filter(cert => cert.certificationName.trim() !== "")
+            .map((cert, idx) => (
+              <div key={idx} className="mt-2">
+                <strong>{cert.certificationName}</strong> — {cert.issuer}
+                <div className="text-sm text-gray-600">{cert.issuedDate}</div>
+                {cert.skillsCovered && <p>Skills Covered: {cert.skillsCovered}</p>}
+              </div>
+            ))}
+        </section>
       )}
-
 
       {/* Interests */}
       {interests.length > 0 && (

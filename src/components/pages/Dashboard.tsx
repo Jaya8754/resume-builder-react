@@ -1,15 +1,14 @@
-import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { ResumeState } from "@/store/resumeSlice";
+import { useState } from "react";
+import { useAllResumes, useCreateResume, useDeleteResume } from "@/hooks/resumeHooks";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/HeaderComponents/Header";
-import { useNavigate, Link } from "react-router-dom";
-import api from "@/api/api"; 
-import { selectUserResumes } from '@/store/resumeSelectors'; 
+import api from "@/api/api";
 import {
   resetResume,
-  deleteResume,
-  loadResume,
   renameResume,
 } from "@/store/resumeSlice";
 import type { RootState, AppDispatch } from "@/store/store";
@@ -20,60 +19,66 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Edit, Trash2, Download, Pencil } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  // AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const Dashboard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { data: allResumes } = useAllResumes();
+
+  const initialResumeData = {
+    fullName: "Untitled",
+    email: "example@example.com",
+    phoneNumber: "0000000000",
+    location: "Unknown",
+  };
+
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
 
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
   const userId = currentUser?.user?.id?.toString();
 
-  const allResumes = useSelector((state: RootState) =>
-    selectUserResumes(state, userId)
-  );
   const hasResumes = allResumes?.length > 0;
 
-  const handleCreateNew = async () => {
+  const { mutate: createResume, isPending: creating } = useCreateResume();
+
+  const handleCreateNew = () => {
     if (!userId) {
-      alert("User ID missing, please login again.");
+      toast.error("User ID missing, please login again.");
       return;
     }
 
-    try {
-      const response = await api.post("/resumes", {
-        fullName: "Unnamed User",
-        jobTitle: "Unspecified",
-        email: "user@example.com",
-        phoneNumber: "0000000000",
-        location: "Unknown",
-        linkedinProfile: "",
-        portfolio: "",
-        profilePicture: "",
-        customFields: {}
-      });
+    createResume(initialResumeData, {
+      onSuccess: (res) => {
+        console.log("CREATE RESUME RESPONSE:", res);
+        const newResumeId = res.data.data.resume.id;
+        if (!newResumeId) {
+          toast.error("No resume ID returned from server.");
+          return;
+        }
 
-      console.log("API response:", response.data);
-
-      const newResumeId = response.data?.data?.resume?.id;
-
-      if (!newResumeId) {
-        console.error("Resume ID not found in response", response.data);
-        throw new Error("No resume ID returned from backend");
-      }
-
-      dispatch(resetResume({ resumeId: newResumeId.toString() }));
-
-      navigate(`/resume/${newResumeId}/personal-info`);
-    } catch (error) {
-      console.error("Error creating new resume:", error);
-      alert("Could not create new resume, please try again.");
-    }
+        dispatch(resetResume({ resumeId: newResumeId.toString() }));
+        navigate(`/resume/${newResumeId}/personal-info`);
+      },
+      onError: (error: any) => {
+        console.error("Error creating resume:", error);
+        toast.error("Failed to create new resume.");
+      },
+    });
   };
 
-
   const handleEdit = (resumeId: string) => {
-    if (!userId) return;
-    dispatch(loadResume({ userId, resumeId }));
     navigate(`/resume/${resumeId}/finalresume`);
   };
 
@@ -84,32 +89,44 @@ const Dashboard: React.FC = () => {
     dispatch(renameResume({ userId, resumeId, newName }));
   };
 
-  const handleDelete = (resumeId: string) => {
-    if (!userId) return;
-    if (window.confirm("Are you sure you want to delete this resume?")) {
-      dispatch(deleteResume({ userId, resumeId }));
-    }
+  const { mutate: deleteResume } = useDeleteResume();
+
+  const handleDelete = (id: string) => {
+    deleteResume(id, {
+      onSuccess: () => toast.success("Resume deleted successfully"),
+      onError: () => toast.error("Failed to delete resume"),
+    });
   };
 
   const handleDownload = async (resume: ResumeState) => {
-    const { pdf } = await import("@react-pdf/renderer");
-    const { ResumeDocument } = await import("@/components/PreviewComponents/ResumeDocument");
+    try {
+      const response = await api.get(`/resumes/${resume.id}`);
+      const fullResume = response.data.data.resume;
+      const { pdf } = await import("@react-pdf/renderer");
+      const { ResumeDocument } = await import("@/components/PreviewComponents/ResumeDocument");
 
-    const blob = await pdf(<ResumeDocument resumeData={resume} />).toBlob();
-    const url = URL.createObjectURL(blob);
+      console.log("Full Resume data for PDF:", fullResume);
 
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${resume.personalInfo.fullName || "Resume"}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = await pdf(<ResumeDocument resumeData={fullResume} />).toBlob();
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${fullResume.personalInfo?.fullName || "Resume"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Download failed", err);
+    }
   };
+
+
 
   return (
     <>
-      <Header isLoggedIn={true} />
-      <div className="max-w-6xl mx-auto px-6 pt-25">
+      <Header isLoggedIn={!!currentUser} />
+      <div className="max-w-6xl mx-auto px-6 pt-25 pl-10 pb-10">
         {hasResumes ? (
           <div className="flex gap-8">
             <div className="w-1/3">
@@ -123,10 +140,15 @@ const Dashboard: React.FC = () => {
                     <div className="text-left">
                       <Link
                         to={`/resume/${resume.id}/finalresume`}
+                        onClick={(e) => {
+                          e.preventDefault(); // Prevent default link navigation
+                          handleEdit(resume.id);
+                        }}
                         className="text-foreground hover:text-primary transition-colors"
                       >
-                        {resume.personalInfo?.fullName || "Untitled Resume"}
+                        {resume.fullName || "Untitled Resume"}
                       </Link>
+
                       <p className="text-sm text-gray-500">
                         {new Date(resume.createdAt).toLocaleDateString()}
                       </p>
@@ -142,7 +164,12 @@ const Dashboard: React.FC = () => {
                           <DropdownMenuItem onClick={() => handleEdit(resume.id)}>
                             <Edit className="w-4 h-4 mr-2" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(resume.id)}>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedResumeId(resume.id);
+                              setOpenDeleteDialog(true);
+                            }}
+                          >
                             <Trash2 className="w-4 h-4 mr-2 text-red-600" /> Delete
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDownload(resume)}>
@@ -162,10 +189,11 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="mt-6">
                 <Button
-                  className="bg-primary hover:bg-primary/90 text-white w-full"
+                  className="bg-primary hover:bg-primary/90 text-white"
                   onClick={handleCreateNew}
+                  disabled={creating}
                 >
-                  Create New Resume
+                  {creating ? "Creating..." : "Create New Resume"}
                 </Button>
               </div>
             </div>
@@ -190,6 +218,30 @@ const Dashboard: React.FC = () => {
             </p>
           </div>
         )}
+       <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Resume</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this resume? This action cannot be undone.
+                  </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-white hover:bg-destructive/90"
+                onClick={() => {
+                  if (selectedResumeId) {
+                    handleDelete(selectedResumeId);
+                  }
+                  setOpenDeleteDialog(false);
+                }}
+              >
+                Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </>
   );

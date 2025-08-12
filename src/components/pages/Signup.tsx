@@ -1,9 +1,10 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import Header from "@/components/HeaderComponents/Header";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signupSchema } from "@/lib/validation";
-import type { SignupFormType } from "@/lib/validation";
+import { signupSchema } from "@/Schema/validation";
+import type { SignupFormType } from "@/Schema/validation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,10 +18,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSignup, type SignupData } from "@/hooks/useSignup";
+import { setCurrentUser } from "@/features/authSlice";  // Correct import
+import type { AppDispatch } from "@/store/store";       // For typing dispatch
 
 function Signup() {
   const navigate = useNavigate();
-  const { mutate, error:signupError } = useSignup();
+  const dispatch = useDispatch<AppDispatch>(); 
+
+  const { mutate, error: signupError } = useSignup();
 
   const {
     register,
@@ -31,7 +36,6 @@ function Signup() {
   });
 
   const onSubmit = (data: SignupFormType) => {
-
     const newUser: SignupData = {
       name: data.name,
       email: data.email,
@@ -40,11 +44,14 @@ function Signup() {
     };
 
     mutate(newUser, {
+      onSuccess: (responseData) => {
       
-      onSuccess: () => {
-        navigate("/dashboard");
-      }
-    })
+        const user = responseData.data.user;        
+        // const token = responseData.accessToken; 
+        dispatch(setCurrentUser({ user, accessToken: "" })); 
+        navigate("/login");
+      },
+    });
   };
 
   return (
@@ -74,7 +81,12 @@ function Signup() {
               <div className="flex flex-col gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" type="text" {...register("name")} autoComplete="new-password" />
+                  <Input
+                    id="name"
+                    type="text"
+                    {...register("name")}
+                    autoComplete="new-password"
+                  />
                   {errors.name && (
                     <p className="text-red-500 text-xs">{errors.name.message}</p>
                   )}

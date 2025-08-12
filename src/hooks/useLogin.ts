@@ -8,16 +8,23 @@ export interface LoginData {
 }
 
 const login = async (data: LoginData) => {
-  try{
-    const response = await api.post('/auth/login', data);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post('/auth/login', data);
+  return response.data;
 };
 
+
+export interface LoginResponse {
+  // Add fields based on your API response, for example:
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    // add other user fields as needed
+  };
+}
+
 export const useLogin = () => {
-  return useMutation<any, CustomError, LoginData>({
+  return useMutation<LoginResponse, CustomError, LoginData>({
     mutationFn: login,
   });
 };

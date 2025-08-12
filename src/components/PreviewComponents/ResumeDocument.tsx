@@ -1,120 +1,83 @@
-import React from "react";
-import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
-Font.register({ family: "Helvetica", src: "path-to-font.ttf" });
+// Helvetica is built-in, so no need to register unless you're using a custom font
 
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
-    fontSize: 11,
+    padding: 32, // px-8 equivalent
+    fontSize: 12, // text-sm
     fontFamily: "Helvetica",
-    lineHeight: 1.4,
-    color: "#333",
+    lineHeight: 1.5, // matches Tailwind’s leading-relaxed
+    color: "#374151", // Tailwind's gray-700
   },
   section: {
-    marginBottom: 12,
+    marginBottom: 8, // mb-6
   },
   header: {
-    fontSize: 18,
+    fontSize: 34, // text-2xl
     fontWeight: "bold",
-    marginBottom: 6,
+    marginBottom: 24,
   },
   subHeader: {
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 16, // text-xl
+    fontWeight: "semibold",
     marginBottom: 4,
-    marginTop: 8,
+    paddingBottom: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "#999",
-    paddingBottom: 2,
-  },
-  text: {
-    marginBottom: 3,
+    borderBottomColor: "#D1D5DB", // gray-300
+    borderBottomStyle: "solid",
   },
   smallText: {
-    fontSize: 9,
-    color: "#555",
+    fontSize: 10,
+    color: "#6B7280", // Tailwind gray-500
+  },
+  text: {
+    marginTop: 4,
+  },
+  bold: {
+    fontWeight: "bold",
   },
   listItem: {
     marginLeft: 12,
-    marginBottom: 2,
   },
 });
 
-interface ResumeData {
-  personalInfo: {
-    fullName: string;
-    jobTitle: string;
-    email: string;
-    phoneNumber: string;
-    location: string;
-  };
-  aboutMe: {
-    aboutMe: string;
-  };
-  education: {
-    degree: string;
-    institution: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    description?: string;
-    cgpa?: string;
-  }[];
-  experience: {
-    experienceType:string;
-    jobTitle: string;
-    companyName: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    responsibilities?: string;
-  }[];
-  skills: string[];
-  projects: {
-    projectTitle: string;
-    description?: string;
-  }[];
-  certifications: {
-    certificationName: string;
-    issuer: string;
-    issuedDate: string;
-    skillsCovered?: string;
-  }[];
-  interests: string[];
-  languages: {
-    language: string;
-    level: string;
-  }[];
-}
+export const ResumeDocument = ({ resumeData }) => {
+const {
+  fullName,
+  jobTitle,
+  email,
+  phoneNumber,
+  location,
+  linkedinProfile,
+  portfolio,
+  aboutMe,
+  educations = [],
+  experiences = [],
+  skills = [],
+  projects = [],
+  certifications = [],
+  interests = [],
+  languages = [],
+} = resumeData || {};
 
-interface ResumeDocumentProps {
-  resumeData: ResumeData;
-}
-
-export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) => {
-  const {
-    personalInfo,
-    aboutMe,
-    education,
-    experience,
-    skills,
-    projects,
-    certifications,
-    interests,
-    languages,
-  } = resumeData;
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Personal Info */}
         <View style={styles.section}>
-          <Text style={styles.header}>{personalInfo.fullName || "Your Name"}</Text>
-          <Text style={styles.text}>{personalInfo.jobTitle || "Job Title"}</Text>
+          <Text style={styles.header}>{fullName || "Your Name"}</Text>
+          <Text style={{ fontSize: 14 }}>{jobTitle || "Job Title"}</Text>
           <Text style={styles.smallText}>
-            {personalInfo.email} | {personalInfo.phoneNumber} | {personalInfo.location}
+            {email} | {phoneNumber} | {location}
           </Text>
+          {linkedinProfile && (
+            <Text style={styles.smallText}>LinkedIn: {linkedinProfile}</Text>
+          )}
+          {portfolio && (
+            <Text style={styles.smallText}>Portfolio: {portfolio}</Text>
+          )}
         </View>
 
         {/* About Me */}
@@ -126,12 +89,12 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
         )}
 
         {/* Education */}
-        {education.length > 0 && (
+        {educations.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.subHeader}>Education</Text>
-            {education.map((edu, i) => (
-              <View key={i} style={{ marginBottom: 6 }}>
-                <Text style={{ fontWeight: "bold" }}>{edu.degree}</Text>
+            {educations.map((edu, i) => (
+              <View key={i} style={{ marginBottom: 8 }}>
+                <Text style={styles.bold}>{edu.degree}</Text>
                 <Text>
                   {edu.institution} — {edu.location}
                 </Text>
@@ -146,14 +109,14 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
         )}
 
         {/* Work Experience */}
-        {experience.filter((exp) => exp.experienceType === "Work").length > 0 && (
+        {experiences.some((exp) => exp.experienceType === "Work") && (
           <View style={styles.section}>
             <Text style={styles.subHeader}>Work Experience</Text>
-            {experience
+            {experiences
               .filter((exp) => exp.experienceType === "Work")
               .map((exp, i) => (
-                <View key={`work-${i}`} style={{ marginBottom: 6 }}>
-                  <Text style={{ fontWeight: "bold" }}>{exp.jobTitle}</Text>
+                <View key={`work-${i}`} style={{ marginBottom: 8 }}>
+                  <Text style={styles.bold}>{exp.jobTitle}</Text>
                   <Text>{exp.companyName} — {exp.location}</Text>
                   <Text style={styles.smallText}>{exp.startDate} - {exp.endDate}</Text>
                   {exp.responsibilities && <Text>{exp.responsibilities}</Text>}
@@ -162,15 +125,15 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
           </View>
         )}
 
-        {/* Internship */}
-        {experience.filter((exp) => exp.experienceType === "Internship").length > 0 && (
+        {/* Internships */}
+        {experiences.some((exp) => exp.experienceType === "Internship") && (
           <View style={styles.section}>
             <Text style={styles.subHeader}>Internships</Text>
-            {experience
+            {experiences
               .filter((exp) => exp.experienceType === "Internship")
               .map((exp, i) => (
-                <View key={`intern-${i}`} style={{ marginBottom: 6 }}>
-                  <Text style={{ fontWeight: "bold" }}>{exp.jobTitle}</Text>
+                <View key={`intern-${i}`} style={{ marginBottom: 8 }}>
+                  <Text style={styles.bold}>{exp.jobTitle}</Text>
                   <Text>{exp.companyName} — {exp.location}</Text>
                   <Text style={styles.smallText}>{exp.startDate} - {exp.endDate}</Text>
                   {exp.responsibilities && <Text>{exp.responsibilities}</Text>}
@@ -183,7 +146,7 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
         {skills.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.subHeader}>Skills</Text>
-            <Text>{skills.join(", ")}</Text>
+            <Text style={styles.text}>{skills.join(", ")}</Text>
           </View>
         )}
 
@@ -192,8 +155,8 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
           <View style={styles.section}>
             <Text style={styles.subHeader}>Projects</Text>
             {projects.map((proj, i) => (
-              <View key={i} style={{ marginBottom: 6 }}>
-                <Text style={{ fontWeight: "bold" }}>{proj.projectTitle}</Text>
+              <View key={i} style={{ marginBottom: 8 }}>
+                <Text style={styles.bold}>{proj.projectTitle}</Text>
                 {proj.description && <Text>{proj.description}</Text>}
               </View>
             ))}
@@ -205,8 +168,8 @@ export const ResumeDocument: React.FC<ResumeDocumentProps> = ({ resumeData }) =>
           <View style={styles.section}>
             <Text style={styles.subHeader}>Certifications</Text>
             {certifications.map((cert, i) => (
-              <View key={i} style={{ marginBottom: 6 }}>
-                <Text style={{ fontWeight: "bold" }}>{cert.certificationName}</Text>
+              <View key={i} style={{ marginBottom: 8 }}>
+                <Text style={styles.bold}>{cert.certificationName}</Text>
                 <Text>
                   {cert.issuer} — <Text style={styles.smallText}>{cert.issuedDate}</Text>
                 </Text>

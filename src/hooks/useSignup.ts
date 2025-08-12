@@ -18,9 +18,23 @@ const signup = async (data: SignupData) => {
     throw error as AxiosError
   }
 };
+interface ServerResponse<T>{
+  message: string;
+  data: T
+}
+
+
+export interface SignupResponse {
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
+};
+
 
 export const useSignup = () => {
-  return useMutation<any, CustomError, SignupData>({
+  return useMutation<ServerResponse<SignupResponse>, CustomError, SignupData>({
     mutationFn: signup,
   });
 };
