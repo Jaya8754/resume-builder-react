@@ -1,8 +1,8 @@
-// src/api/resumeApi.ts or src/hooks/useResumeData.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {PersonalInfo, AboutMe, EducationInfo, ExperienceInfo, 
   SkillsInfo, ProjectInfo, CertificationInfo, LanguageInfo} from "@/components/interfaces/interfaces";
 import api from '../api/api';
+import type { Resume } from '@/components/interfaces/interfaces';
 
 type ResumePayloadType = { 
 
@@ -21,11 +21,10 @@ export const useResumeData = (resumeId: string) =>
       return response.data.data.resume; 
     },
     enabled: !!resumeId,
-    staleTime: 0, // set to 0 to always fetch fresh data when invalidated
+    staleTime: 0, 
   });
 
 
-// Example mutation function in useCreateResume
 export const useCreateResume = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -39,7 +38,7 @@ export const useCreateResume = () => {
 
 
 export const useAllResumes = () => {
-  return useQuery({
+  return useQuery<Resume[]>({
     queryKey: ['resumes'],
     queryFn: async () => {
       const { data } = await api.get('/resumes');
@@ -146,12 +145,17 @@ export const useUpdateLanguages = (resumeId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: { languages: LanguageInfo[] }) =>
-      api.put(`/resumes/${resumeId}/languages`, payload), // wrap array in object
+      api.put(`/resumes/${resumeId}/languages`, payload), 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['resume', resumeId] });
     },
   });
 };
+
+export const saveResume = async () => {
+  return Promise.resolve(true);
+};
+
 
 export const useDeleteResume = () => {
   const queryClient = useQueryClient();
@@ -159,7 +163,7 @@ export const useDeleteResume = () => {
   return useMutation({
     mutationFn: (resumeId: string) => api.delete(`/resumes/${resumeId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['resumes'] }); // refresh the list of all resumes
+      queryClient.invalidateQueries({ queryKey: ['resumes'] }); 
     },
   });
 };

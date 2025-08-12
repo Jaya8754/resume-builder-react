@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import type { ResumeState } from "@/store/resumeSlice";
+import type { Resume } from "@/components/interfaces/interfaces";
 import { useState } from "react";
 import { useAllResumes, useCreateResume, useDeleteResume } from "@/hooks/resumeHooks";
 import { useNavigate, Link } from "react-router-dom";
@@ -28,7 +28,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  // AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 const Dashboard: React.FC = () => {
@@ -49,7 +48,7 @@ const Dashboard: React.FC = () => {
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
   const userId = currentUser?.user?.id?.toString();
 
-  const hasResumes = allResumes?.length > 0;
+  const hasResumes = allResumes && allResumes.length > 0;
 
   const { mutate: createResume, isPending: creating } = useCreateResume();
 
@@ -71,9 +70,14 @@ const Dashboard: React.FC = () => {
         dispatch(resetResume({ resumeId: newResumeId.toString() }));
         navigate(`/resume/${newResumeId}/personal-info`);
       },
-      onError: (error: any) => {
-        console.error("Error creating resume:", error);
-        toast.error("Failed to create new resume.");
+      onError: (error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Error creating resume:", error.message);
+          toast.error(`Failed to create new resume: ${error.message}`);
+        } else {
+          console.error("Unknown error creating resume:", error);
+          toast.error("Failed to create new resume due to unknown error.");
+        }
       },
     });
   };
@@ -98,7 +102,7 @@ const Dashboard: React.FC = () => {
     });
   };
 
-  const handleDownload = async (resume: ResumeState) => {
+  const handleDownload = async (resume: Resume) => {
     try {
       const response = await api.get(`/resumes/${resume.id}`);
       const fullResume = response.data.data.resume;
@@ -132,7 +136,7 @@ const Dashboard: React.FC = () => {
             <div className="w-1/3">
               <h3 className="text-xl font-semibold mb-4">My Resumes</h3>
               <ul className="space-y-4">
-                {allResumes.map((resume) => (
+                {allResumes?.map((resume) => (
                   <li
                     key={resume.id}
                     className="border p-4 rounded-md shadow flex justify-between items-start"
@@ -141,7 +145,7 @@ const Dashboard: React.FC = () => {
                       <Link
                         to={`/resume/${resume.id}/finalresume`}
                         onClick={(e) => {
-                          e.preventDefault(); // Prevent default link navigation
+                          e.preventDefault(); 
                           handleEdit(resume.id);
                         }}
                         className="text-foreground hover:text-primary transition-colors"

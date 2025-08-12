@@ -93,18 +93,17 @@ PersonalInfoForm() {
     setFormErrors((prev) => ({ ...prev, [fieldId]: "" }));
   };
 
+ type PersonalInfoSchemaKeys = keyof typeof personalInfoSchema.shape;
 
   const handleBlur = (fieldId: string) => {
     if (!(fieldId in personalInfoSchema.shape)) return;
-    const key = fieldId as keyof PersonalInfo;
-
+    const key = fieldId as PersonalInfoSchemaKeys;
     const result = personalInfoSchema.shape[key].safeParse(formData[key]);
     setFormErrors((prev) => ({
       ...prev,
       [key]: result.success ? "" : result.error.errors[0]?.message || "",
     }));
   };
-
 
   const addMoreField = () => {
     if (!newFieldLabel.trim()) return;

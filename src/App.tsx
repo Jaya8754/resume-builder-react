@@ -11,7 +11,6 @@ import EducationalInfoForm from "@/components/pages/EducationalInfoForm";
 import ExperienceForm from "@/components/pages/ExperienceForm";
 import AboutMe from "@/components/pages/AboutMeForm";
 import SkillsForm from "@/components/pages/SkillsInfoForm";
-// import ResumeEditorWrapper from "./components/Wrapper/ResumeEditorWrapper";
 import ProjectInfoForm from "@/components/pages/ProjectsInfoForm";
 import CertificateForm from "@/components/pages/CertificationForm";
 import InterestForm from "@/components/pages/InterestForm";

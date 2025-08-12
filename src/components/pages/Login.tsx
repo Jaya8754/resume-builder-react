@@ -33,15 +33,26 @@ function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginFormType) => {
-    mutate(data, {
-      onSuccess: (response) => {
-        dispatch(setCurrentUser(response.data));
-        localStorage.setItem("token", response.data.accessToken);
-        navigate("/dashboard");
-      }
-    });
-  };
+const onSubmit = (data: LoginFormType) => {
+  mutate(data, {
+    onSuccess: (response) => {
+      // Construct the User object as expected by your Redux slice
+      const user = {
+        user: {
+          id: Number(response.user.id), 
+          name: "",                     
+          email: response.user.email,
+        },
+        accessToken: response.token,
+      };
+
+      dispatch(setCurrentUser(user));
+      localStorage.setItem("token", response.token);
+      navigate("/dashboard");
+    }
+  });
+};
+
 
   return (
     <>

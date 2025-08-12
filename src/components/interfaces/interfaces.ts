@@ -40,15 +40,54 @@ export type CertificationInfo = { certificationName: string; issuer: string; iss
 export type InterestsInfo = string[];
 export type LanguageInfo = { language: string; level: string };
 
-export type ResumeData = PersonalInfo &
-  { aboutMe: AboutMe } & {
-    educations: EducationInfo[];
-    experiences: ExperienceInfo[];
-    skills: SkillsInfo;
-    projects: ProjectInfo[];
-    certifications: CertificationInfo[];
-    interests: InterestsInfo;
-    languages: LanguageInfo[];
-  };
+export interface ResumeData {
+  fullName: string;
+  jobTitle: string;
+  email: string;
+  phoneNumber: string;
+  location: string;
+  linkedinProfile?: string;
+  portfolio?: string;
+  profilePicture: string;  // required
+  aboutMe: AboutMe;
+  educations: EducationInfo[];
+  experiences: ExperienceInfo[];
+  skills: string[];
+  projects: ProjectInfo[];
+  certifications: CertificationInfo[];
+  interests: string[];
+  languages: LanguageInfo[];
+}
+
+  export interface Resume {
+  id: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  location: string;
+  createdAt: string;
+  [key: string]: string; // 
+}
+
+export interface RawResume {
+  fullName?: string;
+  jobTitle?: string;
+  email?: string;
+  phoneNumber?: string;
+  location?: string;
+  linkedinProfile?: string;
+  portfolio?: string;
+  profilePicture?: string;
+  aboutMe?: string;
+  about_me?: string;
+  educations?: EducationInfo[];
+  experiences?: ExperienceInfo[];
+  skills?: SkillsInfo;
+  projects?: ProjectInfo[];
+  certifications?: CertificationInfo[];
+  interests?: InterestsInfo;
+  languages?: LanguageInfo[];
+}
+
 
 

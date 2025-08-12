@@ -14,12 +14,10 @@ const login = async (data: LoginData) => {
 
 
 export interface LoginResponse {
-  // Add fields based on your API response, for example:
   token: string;
   user: {
     id: string;
     email: string;
-    // add other user fields as needed
   };
 }
 

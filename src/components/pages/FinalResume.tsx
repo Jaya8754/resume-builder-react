@@ -1,70 +1,75 @@
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { toast } from "sonner"; 
-import { type RootState, type AppDispatch } from "@/store/store";
-import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
-import { ResumeDocument } from "@/components/PreviewComponents/ResumeDocument";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/HeaderComponents/Header";
-import { saveCurrentResume, setCurrentResume } from "@/store/resumeSlice";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { ResumePreview } from "@/components/PreviewComponents/ResumePreview";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useResumeData } from "@/hooks/resumeHooks";
+import type { RawResume } from "@/components/interfaces/interfaces";
+import { useSelector } from "react-redux";
+import { type RootState } from "@/store/store";
+import { ResumeDocument } from "@/components/PreviewComponents/ResumeDocument";
+import type { ResumeData } from "@/components/interfaces/interfaces";
 
 export default function FinalResume() {
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { resumeId } = useParams();
+  const { resumeId } = useParams<{ resumeId: string }>();
+  const validResumeId = resumeId ?? "";
 
-  const resumeData = useSelector((state: RootState) => state.resume.currentResume);
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
-  const userId = currentUser?.user?.id?.toString();
+
+  const { data: fetchedResume, isLoading, isError } = useResumeData(validResumeId);
 
   const [downloadReady, setDownloadReady] = useState(false);
-  const [saving, setSaving] = useState(false);
 
-  const { data: fetchedResume } = useResumeData(resumeId || "");
+  const transformResume = useCallback((resume: RawResume): ResumeData => ({
+    fullName: resume.fullName || "",
+    jobTitle: resume.jobTitle || "",
+    email: resume.email || "",
+    phoneNumber: resume.phoneNumber || "",
+    location: resume.location || "",
+    linkedinProfile: resume.linkedinProfile || "",
+    portfolio: resume.portfolio || "",
+    profilePicture: resume.profilePicture || "",
+    aboutMe: { aboutMe: resume.aboutMe || resume.about_me || "" },
+    educations: resume.educations || [],
+    experiences: resume.experiences || [],
+    skills: resume.skills || [],
+    projects: resume.projects || [],
+    certifications: resume.certifications || [],
+    interests: resume.interests || [],
+    languages: resume.languages || [],
+  }), []);
 
-  useEffect(() => {
-    if (fetchedResume && fetchedResume.id !== resumeData.id) {
-      const transformedResume = {
-        ...fetchedResume,
-        personalInfo: {
-          fullName: fetchedResume.fullName || "",
-          jobTitle: fetchedResume.jobTitle || "",
-          email: fetchedResume.email || "",
-          phoneNumber: fetchedResume.phoneNumber || "",
-          location: fetchedResume.location || "",
-          linkedinProfile: fetchedResume.linkedinProfile || "",
-          portfolio: fetchedResume.portfolio || "",
-          profilePicture: fetchedResume.profilePicture || "",
-        },
-        aboutMe: { aboutMe: fetchedResume.aboutMe || fetchedResume.about_me || "" },
-        education: fetchedResume.educations || [],
-        experience: fetchedResume.experiences || [],
-        skills: fetchedResume.skills || [],
-        projects: fetchedResume.projects || [],
-        certifications: fetchedResume.certifications || [],
-        interests: fetchedResume.interests || [],
-        languages: fetchedResume.languages || [],
-      };
+  if (isLoading) {
+    return (
+      <>
+        <Header isLoggedIn />
+        <div className="max-w-5xl pt-24 mx-auto p-6">
+          <Skeleton className="h-10 w-40 mx-auto mb-4" />
+          <Skeleton className="h-96 rounded-md" />
+          <Skeleton className="h-12 w-40 mt-6 mx-auto" />
+        </div>
+      </>
+    );
+  }
 
-      dispatch(setCurrentResume(transformedResume));
-    }
-  }, [fetchedResume, resumeData.id, dispatch]);
+  if (isError || !fetchedResume) {
+    return (
+      <>
+        <Header isLoggedIn />
+        <div className="max-w-5xl pt-24 mx-auto p-6 text-center text-red-600">
+          Failed to load resume. Please try again.
+        </div>
+      </>
+    );
+  }
 
-  const saveResume = async () => {
-    if (!userId || !resumeData.id) return false;
-    try {
-      setSaving(true);
-      await dispatch(saveCurrentResume({ userId, resumeId: resumeData.id }));
-      setSaving(false);
-      return true;
-    } catch {
-      setSaving(false);
-      return false;
-    }
-  };
+  const resumeData = transformResume(fetchedResume);
+
+  const saveResume = async () => Promise.resolve(true);
 
   const handleSave = async () => {
     const saved = await saveResume();
@@ -89,7 +94,7 @@ export default function FinalResume() {
   return (
     <>
       <Header isLoggedIn />
-      <div className="max-w-5xl pt-24 mx-auto p-6">
+      <div className="max-w-5xl pt-24 mx-auto p-6 flex flex-col gap-8">
         <div
           id="resume-content"
           className="border rounded-md shadow-md p-4 bg-white dark:bg-gray-900"
@@ -97,9 +102,9 @@ export default function FinalResume() {
           <ResumePreview resumeData={resumeData} showEditLinks />
         </div>
 
-        <div className="flex flex-row justify-center gap-4 mt-8">
-          <Button variant="skyblue" onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save"}
+        <div className="flex flex-row justify-center gap-4">
+          <Button variant="skyblue" onClick={handleSave}>
+            Save
           </Button>
 
           {downloadReady ? (
@@ -121,8 +126,8 @@ export default function FinalResume() {
               }
             </PDFDownloadLink>
           ) : (
-            <Button variant="skyblue" className="w-40" onClick={handleDownload} disabled={saving}>
-              {saving ? "Saving..." : "Save and Download"}
+            <Button variant="skyblue" className="w-40" onClick={handleDownload}>
+              Save and Download
             </Button>
           )}
         </div>

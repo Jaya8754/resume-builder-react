@@ -38,6 +38,7 @@ export const ResumePreview: React.FC<ResumePreviewProps> = ({
   languages: resume.languages ?? [],
 };
 
+
   const {
     personalInfo,
     aboutMe,
