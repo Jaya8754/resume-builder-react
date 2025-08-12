@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const experienceInfoSchema = z
   .object({
-    experienceType: z.string(), // always required
+    experienceType: z.string(),
     jobTitle: z.string().optional(),
     companyName: z.string().optional(),
     location: z.string().optional(),
@@ -14,7 +14,6 @@ export const experienceInfoSchema = z
     const shouldValidate =
       data.experienceType === "Work" || data.experienceType === "Internship";
 
-    // If no need to validate, return early
     if (!shouldValidate) return;
 
     if (!data.jobTitle || data.jobTitle.trim().length < 2) {

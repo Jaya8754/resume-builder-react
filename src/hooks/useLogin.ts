@@ -14,10 +14,13 @@ const login = async (data: LoginData) => {
 
 
 export interface LoginResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      name?: string;
+    };
+    accessToken: string;
   };
 }
 

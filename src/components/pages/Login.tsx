@@ -36,18 +36,20 @@ function Login() {
 const onSubmit = (data: LoginFormType) => {
   mutate(data, {
     onSuccess: (response) => {
-      // Construct the User object as expected by your Redux slice
+      const userData = response.data.user;
+      const token = response.data.accessToken;
+
       const user = {
         user: {
-          id: Number(response.user.id), 
-          name: "",                     
-          email: response.user.email,
+          id: Number(userData.id),
+          name: userData.name ?? "",
+          email: userData.email,
         },
-        accessToken: response.token,
+        accessToken: token,
       };
 
       dispatch(setCurrentUser(user));
-      localStorage.setItem("token", response.token);
+      localStorage.setItem("token", token);
       navigate("/dashboard");
     }
   });
